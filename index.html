@@ -14,6 +14,7 @@
   --bg:#f5f2eb; --card:#fffdf8; --text:#2c2b28; --muted:#77736d; --line:#e4dfd6;
   --accent:#758a72; --accent2:#9dac98; --soft:#e9eee6; --good:#dfeee3; --warn:#f6ead2; --bad:#f4dede;
   --shadow:0 5px 18px rgba(45,40,32,.06);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
 }
 [data-theme="bordeaux"]{
   --bg:#f7f0ef; --card:#fffafa; --text:#332829; --muted:#7c686a; --line:#ead9da;
@@ -56,9 +57,63 @@
   --warn:#594223;
   --bad:#57343b;
 }
+[data-theme="checker"]{
+  --bg:#f4efe5;
+  --card:#fff8ec;
+  --text:#171412;
+  --muted:#756b62;
+  --line:#d6cbbd;
+  --accent:#e87522;
+  --accent2:#f3a247;
+  --soft:#f5e1c9;
+  --good:#dcebdc;
+  --warn:#f6dfb3;
+  --bad:#f2d2d0;
+  --shadow:0 5px 18px rgba(36,27,18,.08);
+}
+[data-theme="checker"] body{
+  background-color:#f4efe5;
+  background-image:
+    linear-gradient(45deg,#171412 25%,transparent 25%),
+    linear-gradient(-45deg,#171412 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#171412 75%),
+    linear-gradient(-45deg,transparent 75%,#171412 75%);
+  background-size:42px 42px;
+  background-position:0 0,0 21px,21px -21px,-21px 0;
+}
+[data-theme="checker"] .app{
+  background:rgba(244,239,229,.94);
+  border-radius:28px;
+}
+[data-theme="checker"] .card{
+  border-width:2px;
+  border-color:#171412;
+}
+[data-theme="checker"] .hero{
+  background:linear-gradient(145deg,#e87522,#f0a14d);
+  border:3px solid #171412;
+  box-shadow:6px 6px 0 #171412;
+}
+[data-theme="checker"] .tabs button.active,
+[data-theme="checker"] button.primary{
+  background:#e87522;
+  border-color:#171412;
+  color:#fff8ec;
+  box-shadow:3px 3px 0 #171412;
+}
+[data-theme="checker"] .pill{
+  background:#f7d8b4;
+  border:1px solid #171412;
+}
+[data-theme="checker"] .bar{
+  border:1px solid #171412;
+}
+[data-theme="checker"] h1::after{
+  content:' 🍒';
+}
 *{box-sizing:border-box}
 html,body{min-height:100%}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--text)}
 button,input,select{font:inherit}
 button{cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:11px 12px;font-weight:700}
 button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -90,6 +145,14 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
 .expenseActions{display:flex;align-items:center;gap:8px;flex-shrink:0}.deleteBtn{padding:7px 9px;font-size:14px}
 .footer{font-size:11px;color:var(--muted);line-height:1.45;margin-top:15px}
 .themeBox{width:145px}.themeBox select{padding:9px}
+.designPanel{padding:0;overflow:hidden}
+.designPanel summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:800;display:flex;align-items:center;justify-content:space-between}
+.designPanel summary::-webkit-details-marker{display:none}
+.designPanel summary::after{content:'▾';font-size:14px;color:var(--muted);transition:transform .2s}
+.designPanel[open] summary::after{transform:rotate(180deg)}
+.designContent{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px;border-top:1px solid var(--line)}
+.designContent>div{min-width:0}
+@media(max-width:390px){.designContent{grid-template-columns:1fr}}
 .progressline{display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:12px}
 .savingsBarRow{display:grid;grid-template-columns:62px 1fr 72px;gap:8px;align-items:center;margin:10px 0}
 .savingsTrack{height:11px;border-radius:999px;background:var(--soft);overflow:hidden}.savingsFill{height:100%;background:var(--accent)}
@@ -113,20 +176,39 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
 <div class="app">
   <div class="topline">
     <div><h1>💰 Sabrinas Budget</h1><div class="muted">Deine kleine Budget-App</div></div>
-    <div class="themeBox"><label>🎨 Design</label>
-      <select id="theme">
-        <option value="sage">🌿 Salbei</option>
-        <option value="bordeaux">🍷 Bordeaux</option>
-        <option value="library">🌙 Dark Library</option>
-        <option value="ocean">🌊 Ocean</option>
-        <option value="lavender">💜 Lavendel</option>
-        <option value="sunset">🌅 Sunset</option>
-        <option value="berry">🍓 Berry</option>
-        <option value="candy">🍬 Pastell Candy</option>
-        <option value="paris">🧡 Navy & Adobe</option>
-      </select>
-    </div>
   </div>
+
+  <details class="card designPanel">
+    <summary>🎨 Design</summary>
+    <div class="designContent">
+      <div>
+        <label>Farben</label>
+        <select id="theme">
+          <option value="sage">🌿 Salbei</option>
+          <option value="bordeaux">🍷 Bordeaux</option>
+          <option value="library">🌙 Dark Library</option>
+          <option value="ocean">🌊 Ocean</option>
+          <option value="lavender">💜 Lavendel</option>
+          <option value="sunset">🌅 Sunset</option>
+          <option value="berry">🍓 Berry</option>
+          <option value="candy">🍬 Pastell Candy</option>
+          <option value="paris">🧡 Navy & Adobe</option>
+          <option value="checker">🏁 Checkerboard Retro</option>
+        </select>
+      </div>
+      <div>
+        <label>Schriftart</label>
+        <select id="font">
+          <option value="modern">Modern</option>
+          <option value="avenir">Avenir</option>
+          <option value="book">Bookish</option>
+          <option value="elegant">Elegant</option>
+          <option value="rounded">Rund</option>
+          <option value="typewriter">Schreibmaschine</option>
+        </select>
+      </div>
+    </div>
+  </details>
 
   <div class="card hero">
     <div class="muted">Heute noch verfügbar</div>
@@ -309,8 +391,9 @@ if(!db||!db.months){
  db.months['2026-10']=inflate(templates['2026-10'],'2026-10');
  db.months['2026-11']=inflate(templates['2026-11'],'2026-11');
 }
-if(!db.settings)db.settings={theme:'sage'};
+if(!db.settings)db.settings={theme:'sage',font:'modern'};
 if(!db.settings.theme)db.settings.theme='sage';
+if(!db.settings.font)db.settings.font='modern';
 
 // V4 migration: remove ONLY the old demo cigarette entry; preserve the user's own real entries.
 if(!db.migrations)db.migrations={};
@@ -389,7 +472,20 @@ const $=id=>document.getElementById(id);
 
 function applyTheme(){
  document.documentElement.dataset.theme=db.settings.theme==='sage'?'':db.settings.theme;$('theme').value=db.settings.theme;
- const colors={sage:'#758a72',bordeaux:'#8b4e59',library:'#6f8a75',ocean:'#2c8fa3',lavender:'#8b6bb3',sunset:'#e67e5f',berry:'#c84f87',candy:'#ef6fa8',paris:'#0f2742'};document.querySelector('meta[name="theme-color"]').setAttribute('content',colors[db.settings.theme]||colors.sage)
+ const colors={sage:'#758a72',bordeaux:'#8b4e59',library:'#6f8a75',ocean:'#2c8fa3',lavender:'#8b6bb3',sunset:'#e67e5f',berry:'#c84f87',candy:'#ef6fa8',paris:'#0f2742',checker:'#f4efe5'};document.querySelector('meta[name="theme-color"]').setAttribute('content',colors[db.settings.theme]||colors.sage)
+}
+function applyFont(){
+ const fonts={
+   modern:'-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif',
+   avenir:'"Avenir Next",Avenir,-apple-system,BlinkMacSystemFont,sans-serif',
+   book:'Palatino,"Palatino Linotype","Book Antiqua",Georgia,serif',
+   elegant:'Baskerville,"Hoefler Text",Georgia,serif',
+   rounded:'"Arial Rounded MT Bold","Avenir Next",Arial,sans-serif',
+   typewriter:'"Courier New",Courier,monospace'
+ };
+ const selected=db.settings.font||'modern';
+ document.documentElement.style.setProperty('--font',fonts[selected]||fonts.modern);
+ $('font').value=selected;
 }
 function renderMonths(){
  $('month').innerHTML='';Object.keys(db.months).sort().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);if(k===db.active)o.selected=true;$('month').appendChild(o)})
@@ -432,10 +528,11 @@ function renderCalendar(){
  $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(defaultsEmoji[x.fixedName]||'📤')+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(x.day).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=euro.format(x.amount);r.append(l,a);$('calendarList').appendChild(r)});
  $('calendarSum').textContent=euro.format(items.reduce((s,x)=>s+x.amount,0))
 }
-function renderAll(){applyTheme();renderMonths();renderTop();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar()}
+function renderAll(){applyTheme();applyFont();renderMonths();renderTop();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar()}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
 $('theme').onchange=e=>{db.settings.theme=e.target.value;save();applyTheme()};
+$('font').onchange=e=>{db.settings.font=e.target.value;save();applyFont()};
 $('month').onchange=e=>{db.active=e.target.value;save();renderAll()};
 $('income').onchange=e=>{const n=num(e.target.value);if(n>=0){state().income=n;save();renderAll()}};
 $('savedActual').onchange=e=>{const n=num(e.target.value);if(n>=0){state().savedActual=n;save();renderAll()}};
@@ -444,7 +541,8 @@ $('addCategory').onclick=()=>{const name=$('catName').value.trim(),budget=num($(
 $('cleanMonth').onclick=()=>{if(!confirm('Wirklich komplett neu starten?\\n\\nAlle erfassten Ausgaben dieses Monats werden gelöscht und alle Fixkosten wieder auf „Offen“ gesetzt. Deine Budgets und Kategorien bleiben erhalten.'))return;state().expenses=[];state().fixed.forEach(f=>f.done=false);state().savedActual=0;save();renderAll();alert('Der Monat ist jetzt sauber auf Start gesetzt ✓')};
 $('exportBackup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Sabrina-Budget-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('importBackup').onclick=()=>$('backupFile').click();
-$('backupFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;if(!db.settings)db.settings={theme:'sage'};Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'})});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
+$('backupFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;if(!db.settings)db.settings={theme:'sage',font:'modern'};
+if(!db.settings.font)db.settings.font='modern';Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'})});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
 $('newMonth').onclick=()=>{const ks=Object.keys(db.months).sort(),last=ks[ks.length-1],[y,m]=last.split('-').map(Number),d=new Date(y,m,1),key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(db.months[key]){db.active=key;save();renderAll();return}const prev=db.months[last],s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,fixed:prev.fixed.map(x=>({...x,done:false})),budgets:prev.budgets.map(x=>({...x,spent:0})),expenses:[]};s.calendar=defaultCalendar(key,s);db.months[key]=s;db.active=key;save();renderAll()};
 renderAll();
 })();
