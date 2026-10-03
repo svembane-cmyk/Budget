@@ -1,16 +1,11 @@
-Sabrinas Budget PWA – Version 10
+Sabrinas Budget PWA – Version 11
 
-NEU:
-- Neues auswählbares Design: 🏁 Checkerboard Retro
-- Inspiriert vom neuen App-Icon:
-  - Schwarz/Creme Checkerboard
-  - warmes Orange
-  - Kirschrot als Retro-Akzent
-  - kräftige dunkle Rahmen und leichte Sticker-/Retro-Optik
-- Das neue Checkerboard-Budget-Icon bleibt als Home-Screen-Icon erhalten.
-- Farben + Schriftarten bleiben gemeinsam unter „🎨 Design“.
-- Alle bisherigen Designs und Funktionen bleiben erhalten.
-- Bestehende Budgetdaten bleiben erhalten.
+ÄNDERUNG:
+- Der komplette Bereich „🎨 Design“ wurde nach ganz unten verschoben.
+- Farben und Schriftarten bleiben zusammen in diesem aufklappbaren Bereich.
+- Das eigentliche Budget steht damit direkt im Fokus.
+- Das Checkerboard-Retro-Design und das Checkerboard-Budget-Icon bleiben erhalten.
+- Alle bisherigen Funktionen und gespeicherten Daten bleiben erhalten.
 
 GITHUB-UPDATE:
 Im selben Repository diese Dateien hochladen/ersetzen:
@@ -21,5 +16,4 @@ Im selben Repository diese Dateien hochladen/ersetzen:
 - icon-512.png
 - apple-touch-icon.png
 
-Danach in der App:
-🎨 Design > 🏁 Checkerboard Retro
+Tatsächlich geändert wurden hauptsächlich index.html und sw.js.
