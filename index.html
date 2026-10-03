@@ -43,6 +43,19 @@
   --bg:#fff9fc; --card:#ffffff; --text:#3c3440; --muted:#807383; --line:#eee1eb;
   --accent:#ef6fa8; --accent2:#6fcad7; --soft:#fce7f1; --good:#e2f3ec; --warn:#fff1cf; --bad:#f7dce7;
 }
+[data-theme="paris"]{
+  --bg:#0f2742;
+  --card:#173451;
+  --text:#fff5e8;
+  --muted:#c7c0b6;
+  --line:#31516f;
+  --accent:#c65a1e;
+  --accent2:#e58a3b;
+  --soft:#203f5c;
+  --good:#254d43;
+  --warn:#594223;
+  --bad:#57343b;
+}
 *{box-sizing:border-box}
 html,body{min-height:100%}
 body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
@@ -110,6 +123,7 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
         <option value="sunset">🌅 Sunset</option>
         <option value="berry">🍓 Berry</option>
         <option value="candy">🍬 Pastell Candy</option>
+        <option value="paris">🧡 Navy & Adobe</option>
       </select>
     </div>
   </div>
@@ -375,7 +389,7 @@ const $=id=>document.getElementById(id);
 
 function applyTheme(){
  document.documentElement.dataset.theme=db.settings.theme==='sage'?'':db.settings.theme;$('theme').value=db.settings.theme;
- const colors={sage:'#758a72',bordeaux:'#8b4e59',library:'#6f8a75',ocean:'#2c8fa3',lavender:'#8b6bb3',sunset:'#e67e5f',berry:'#c84f87',candy:'#ef6fa8'};document.querySelector('meta[name="theme-color"]').setAttribute('content',colors[db.settings.theme]||colors.sage)
+ const colors={sage:'#758a72',bordeaux:'#8b4e59',library:'#6f8a75',ocean:'#2c8fa3',lavender:'#8b6bb3',sunset:'#e67e5f',berry:'#c84f87',candy:'#ef6fa8',paris:'#0f2742'};document.querySelector('meta[name="theme-color"]').setAttribute('content',colors[db.settings.theme]||colors.sage)
 }
 function renderMonths(){
  $('month').innerHTML='';Object.keys(db.months).sort().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);if(k===db.active)o.selected=true;$('month').appendChild(o)})

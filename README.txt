@@ -1,26 +1,21 @@
-Sabrinas Budget PWA – Version 6
+Sabrinas Budget PWA – Version 7
 
 NEU:
-- Neues App-Icon: dunkelgrünes Leder-Ledger mit goldenem S und Euro-Münzen.
-- Apple-Touch-Icon (180x180) für den iPhone-Home-Bildschirm.
-- PWA-Icons (192x192 und 512x512) aktualisiert.
-- Alle Funktionen aus Version 5 bleiben erhalten.
+- Zusätzliches Design: 🧡 Navy & Adobe
+- Inspiriert von der Farbkombination Classic Blue + warmem Adobe/Orange.
+- Dunkles Navy als Grundton, warmes Rostorange für Buttons und Highlights,
+  Creme für die Schrift.
+- Alle bisherigen Designs bleiben erhalten.
+- Das neue grüne Leder-/Gold-S-App-Icon aus Version 6 bleibt unverändert.
+- Alle bisherigen Funktionen und gespeicherten Daten bleiben erhalten.
 
 GITHUB-UPDATE:
-Lade diese Dateien in dasselbe Repository hoch und ersetze die alten:
+Im selben Repository diese Dateien hochladen/ersetzen:
 - index.html
-- manifest.webmanifest
 - sw.js
+- manifest.webmanifest
 - icon-192.png
 - icon-512.png
 - apple-touch-icon.png
 
-WICHTIG AUF DEM IPHONE:
-Das bestehende Home-Bildschirm-Icon kann von iOS gecacht werden.
-Falls nach dem Update noch das alte Symbol zu sehen ist:
-1. Budget-Web-App vom Home-Bildschirm entfernen.
-2. Die GitHub-Pages-Adresse in Safari öffnen.
-3. Teilen > Zum Home-Bildschirm hinzufügen.
-Dann wird das neue Icon verwendet.
-
-Deine Budgetdaten bleiben erhalten, solange die Website-Daten in Safari nicht gelöscht werden.
+Tatsächlich geändert wurden vor allem index.html und sw.js.
