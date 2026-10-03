@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f6f1ea">
+<title>Sabrinas Budget-App</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+:root{
+  --bg:#f6f1ea; --card:#fffdf9; --text:#2b2723; --muted:#766f68; --line:#e6ddd4;
+  --accent:#8e6f5e; --soft:#efe5dd; --good:#dfeee3; --warn:#f8edd5; --bad:#f5dddd;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+.app{max-width:520px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))}
+h1{font-size:24px;margin:0 0 4px}.muted{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin:12px 0;box-shadow:0 2px 12px rgba(40,30,20,.035)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--soft);border-radius:16px;padding:12px}.stat b{font-size:20px;display:block;margin-top:3px}
+input,select,button{font:inherit}
+input,select{width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px;color:var(--text)}
+button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px;color:var(--text);font-weight:700}
+button.primary{background:var(--accent);color:white;border-color:var(--accent)}
+button.done{background:var(--good)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:sticky;top:0;background:rgba(246,241,234,.92);backdrop-filter:blur(10px);padding:8px 0;z-index:10}
+.tabs button.active{background:var(--accent);color:white;border-color:var(--accent)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:11px 0}
+.row:first-child{border-top:0}.row .left{min-width:0}.row .name{font-weight:700}.row .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.bar{height:8px;background:#eee7df;border-radius:999px;overflow:hidden;margin-top:9px}.bar>div{height:100%;background:var(--accent)}
+.budget{padding:11px 0;border-top:1px solid var(--line)}.budget:first-child{border-top:0}
+.budgethead{display:flex;justify-content:space-between;gap:10px}.right{text-align:right}
+.hidden{display:none!important}.msg{font-size:13px;color:var(--muted);margin-top:8px}.good{background:var(--good)!important}.warn{background:var(--warn)!important}.bad{background:var(--bad)!important}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.full{grid-column:1/-1}
+label{font-size:13px;font-weight:700;display:block;margin:8px 0 5px}
+.small{font-size:12px}.expense{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.footer{font-size:11px;color:var(--muted);line-height:1.45;margin-top:14px}
+.pill{display:inline-block;background:var(--soft);padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>💰 Sabrinas Budget</h1>
+  <div class="muted">Speichert automatisch auf diesem Gerät.</div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:end">
+      <div style="flex:1">
+        <label>Monat</label>
+        <select id="month"></select>
+      </div>
+      <div style="flex:1">
+        <label>Einkommen</label>
+        <input id="income" inputmode="decimal">
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:12px">
+      <div class="stat"><span class="muted">Fixkosten offen</span><b id="openFixed">0 €</b><span id="openCount" class="small muted"></span></div>
+      <div class="stat"><span class="muted">Frei nach Planung</span><b id="free">0 €</b><span class="small muted">nach allen Töpfen</span></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button data-tab="overview" class="active">Übersicht</button>
+    <button data-tab="fixed">Fixkosten</button>
+    <button data-tab="expenses">Ausgaben</button>
+  </div>
+
+  <section id="overview" class="panel">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div><b>Sparziel</b><div class="muted">Monatlich zurücklegen</div></div>
+        <div style="width:110px"><input id="savingGoal" inputmode="decimal"></div>
+      </div>
+      <div class="bar"><div id="savingBar"></div></div>
+      <div id="savingText" class="msg"></div>
+    </div>
+    <div class="card"><b>Budget-Töpfe</b><div id="budgets"></div></div>
+  </section>
+
+  <section id="fixed" class="panel hidden">
+    <div class="card">
+      <b>Feste Abbuchungen</b>
+      <div class="muted">Tippe auf „Offen“, sobald eine Abbuchung erledigt ist.</div>
+      <div id="fixedList" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <section id="expenses" class="panel hidden">
+    <div class="card">
+      <b>Ausgabe eintragen</b>
+      <label>Kategorie</label><select id="category"></select>
+      <label>Betrag</label><input id="amount" inputmode="decimal" placeholder="0,00">
+      <label>Notiz</label><input id="note" placeholder="z. B. Buch, Café, Rossmann …">
+      <button id="addExpense" class="primary" style="width:100%;margin-top:10px">Ausgabe speichern</button>
+      <div id="msg" class="msg"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between"><b>Letzte Ausgaben</b><span id="spentTotal" class="pill"></span></div>
+      <div id="expenseList"></div>
+    </div>
+  </section>
+
+  <div class="card">
+    <b>Backup</b>
+    <div class="muted">Für Gerätewechsel oder falls du die App einmal zurücksetzen musst.</div>
+    <div class="actions" style="margin-top:10px">
+      <button id="exportBackup">Backup speichern</button>
+      <button id="importBackup">Backup laden</button>
+      <input id="backupFile" type="file" accept="application/json" class="hidden">
+      <button id="newMonth" class="full">Neuen Monat aus Vorlage anlegen</button>
+      <button id="resetCurrent" class="full">Aktuellen Monat zurücksetzen</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    Deine Budgetdaten werden mit <b>localStorage</b> im Browser/Webview gespeichert. Ein Backup als JSON ist trotzdem sinnvoll, weil App-/Browserdaten beim Löschen oder Zurücksetzen verloren gehen können.
+  </div>
+</div>
+
+<script>
+(() => {
+const KEY='sabrina_budget_app_v3';
+const BASE=1300;
+const euro = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
+
+const templates = {
+  '2026-10': {
+    income:1300, savingGoal:50,
+    fixed:[
+      ['Gemeinschaftskonto',726],['LEAF',18],['Versicherungen',18.70],['Apple Music',10.99],
+      ['iCloud',2.99],['Staatsanwaltschaft',50],['Amazon Prime',8.99],['BookBeat',14.99],
+      ['Crunchyroll',4.49],['WOW',2.98],['Handy',55]
+    ],
+    budgets:[
+      ['Zigaretten',104,0],['Sparen',50,.50],['Alltag & Kleinkram',80,.20],
+      ['Freizeit / Bücher / Spaß',50,.15],['Essen gehen / unterwegs',30,.10],['Puffer',29.02,.05]
+    ],
+    expenses:[{category:'Zigaretten',amount:15.80,note:'bereits im Oktober ausgegeben'}]
+  },
+  '2026-11': {
+    income:1300, savingGoal:50,
+    fixed:[
+      ['Gemeinschaftskonto',700],['Urlaubsgeld Gemeinschaftskonto',50],['Versicherungen',18.70],
+      ['Apple Music',10.99],['iCloud',2.99],['Staatsanwaltschaft',50],['Amazon Prime',8.99],
+      ['BookBeat',14.99],['Crunchyroll',4.49],['WOW',2.98],['Handy',10]
+    ],
+    budgets:[
+      ['Zigaretten',104,0],['Sparen',50,.50],['Alltag & Kleinkram',80,.20],
+      ['Freizeit / Bücher / Spaß',50,.15],['Essen gehen / unterwegs',30,.10],['Puffer',29.02,.05]
+    ],
+    expenses:[]
+  }
+};
+
+function inflate(t){
+  return {
+    income:t.income, savingGoal:t.savingGoal,
+    fixed:t.fixed.map(x=>({name:x[0],amount:x[1],done:false})),
+    budgets:t.budgets.map(x=>({name:x[0],base:x[1],extraShare:x[2],spent:0})),
+    expenses:(t.expenses||[]).map(x=>({...x}))
+  }
+}
+let db;
+try { db=JSON.parse(localStorage.getItem(KEY)||'null'); } catch(e){ db=null; }
+if(!db || !db.months){
+  db={active:'2026-10',months:{}};
+  db.months['2026-10']=inflate(templates['2026-10']);
+  db.months['2026-11']=inflate(templates['2026-11']);
+  save();
+}
+function save(){ localStorage.setItem(KEY,JSON.stringify(db)); }
+function state(){ return db.months[db.active]; }
+function num(v){const n=Number(String(v).trim().replace(/\./g,'').replace(',','.'));return Number.isFinite(n)?n:NaN}
+function planned(b){ return b.base + Math.max(0,state().income-BASE)*b.extraShare; }
+function fixedTotal(){return state().fixed.reduce((s,x)=>s+x.amount,0)}
+function budgetTotal(){return state().budgets.reduce((s,x)=>s+planned(x),0)}
+function syncSpent(){
+  state().budgets.forEach(b=>b.spent=0);
+  state().expenses.forEach(e=>{const b=state().budgets.find(x=>x.name===e.category); if(b)b.spent+=e.amount;});
+}
+function monthLabel(k){const [y,m]=k.split('-'); const names=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']; return names[+m-1]+' '+y}
+
+const $=id=>document.getElementById(id);
+
+function renderMonths(){
+  $('month').innerHTML='';
+  Object.keys(db.months).sort().forEach(k=>{
+    const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k); if(k===db.active)o.selected=true; $('month').appendChild(o);
+  });
+}
+function renderTop(){
+  $('income').value=String(state().income).replace('.',',');
+  $('savingGoal').value=String(state().savingGoal).replace('.',',');
+  const open=state().fixed.filter(x=>!x.done);
+  $('openFixed').textContent=euro.format(open.reduce((s,x)=>s+x.amount,0));
+  $('openCount').textContent=open.length+' offen';
+  $('free').textContent=euro.format(state().income-fixedTotal()-budgetTotal());
+  const s=state().budgets.find(x=>x.name==='Sparen'); const target=Math.max(0,state().savingGoal); const val=s?planned(s):0;
+  $('savingBar').style.width=(target?Math.min(100,val/target*100):100)+'%';
+  $('savingText').textContent=euro.format(val)+' von '+euro.format(target)+' eingeplant';
+}
+function renderFixed(){
+  $('fixedList').innerHTML='';
+  state().fixed.forEach((f,i)=>{
+    const r=document.createElement('div');r.className='row';
+    const l=document.createElement('div');l.className='left';l.innerHTML='<div class="name"></div><div class="sub"></div>';
+    l.querySelector('.name').textContent=f.name;l.querySelector('.sub').textContent=euro.format(f.amount);
+    const b=document.createElement('button');b.textContent=f.done?'Erledigt ✓':'Offen'; if(f.done)b.classList.add('done');
+    b.onclick=()=>{state().fixed[i].done=!state().fixed[i].done;save();renderAll();};
+    r.append(l,b);$('fixedList').appendChild(r);
+  });
+}
+function renderBudgets(){
+  syncSpent();$('budgets').innerHTML='';
+  state().budgets.forEach(b=>{
+    const total=planned(b), left=total-b.spent, pct=total?Math.min(100,Math.max(0,b.spent/total*100)):0;
+    const d=document.createElement('div');d.className='budget';
+    d.innerHTML='<div class="budgethead"><div><b></b><div class="sub"></div></div><div class="right"><b></b><div class="sub">übrig</div></div></div><div class="bar"><div></div></div>';
+    d.querySelector('.budgethead>div:first-child b').textContent=b.name;
+    d.querySelector('.budgethead>div:first-child .sub').textContent='Budget '+euro.format(total)+' · ausgegeben '+euro.format(b.spent);
+    d.querySelector('.right b').textContent=euro.format(left);
+    d.querySelector('.bar>div').style.width=pct+'%';
+    $('budgets').appendChild(d);
+  });
+}
+function renderCategories(){
+  $('category').innerHTML='';
+  state().budgets.filter(b=>b.name!=='Sparen').forEach(b=>{const o=document.createElement('option');o.value=b.name;o.textContent=b.name;$('category').appendChild(o);});
+}
+function renderExpenses(){
+  syncSpent();$('expenseList').innerHTML='';
+  const xs=[...state().expenses].reverse();
+  $('spentTotal').textContent=euro.format(state().expenses.reduce((s,x)=>s+x.amount,0));
+  if(!xs.length){$('expenseList').innerHTML='<div class="msg">Noch keine Ausgaben eingetragen.</div>';return;}
+  xs.slice(0,12).forEach(x=>{
+    const r=document.createElement('div');r.className='expense';
+    const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';
+    l.querySelector('b').textContent=x.category;l.querySelector('.sub').textContent=x.note||'Ausgabe';
+    const a=document.createElement('b');a.textContent='− '+euro.format(x.amount);r.append(l,a);$('expenseList').appendChild(r);
+  });
+}
+function renderAll(){renderMonths();renderTop();renderFixed();renderBudgets();renderCategories();renderExpenses();}
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden');
+});
+$('month').onchange=e=>{db.active=e.target.value;save();renderAll();}
+$('income').onchange=e=>{const n=num(e.target.value);if(n>=0){state().income=n;save();renderAll();}}
+$('savingGoal').onchange=e=>{const n=num(e.target.value);if(n>=0){state().savingGoal=n;save();renderAll();}}
+$('addExpense').onclick=()=>{
+  const n=num($('amount').value); if(!(n>0)){ $('msg').textContent='Bitte einen gültigen Betrag eingeben.'; return; }
+  state().expenses.push({category:$('category').value,amount:n,note:$('note').value.trim()});
+  $('amount').value='';$('note').value='';$('msg').textContent='Gespeichert ✓';save();renderAll();
+};
+$('exportBackup').onclick=()=>{
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='Sabrina-Budget-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('importBackup').onclick=()=>$('backupFile').click();
+$('backupFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;save();renderAll();alert('Backup geladen ✓');}catch(err){alert('Backup konnte nicht gelesen werden.')}};
+  r.readAsText(f);
+};
+$('newMonth').onclick=()=>{
+  const ks=Object.keys(db.months).sort(); const last=ks[ks.length-1]; const [y,m]=last.split('-').map(Number);
+  const d=new Date(y,m,1); const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  if(db.months[key]){db.active=key;save();renderAll();return;}
+  const prev=db.months[last];
+  db.months[key]={income:prev.income,savingGoal:prev.savingGoal,fixed:prev.fixed.map(x=>({...x,done:false})),budgets:prev.budgets.map(x=>({...x,spent:0})),expenses:[]};
+  db.active=key;save();renderAll();
+};
+$('resetCurrent').onclick=()=>{
+  if(!confirm('Aktuellen Monat wirklich zurücksetzen?'))return;
+  if(templates[db.active]) db.months[db.active]=inflate(templates[db.active]);
+  else {
+    const s=state(); db.months[db.active]={income:s.income,savingGoal:s.savingGoal,fixed:s.fixed.map(x=>({...x,done:false})),budgets:s.budgets.map(x=>({...x,spent:0})),expenses:[]};
+  }
+  save();renderAll();
+};
+renderAll();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
