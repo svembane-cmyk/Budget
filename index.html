@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#758a72">
 <title>Sabrinas Budget</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <style>
 :root{
   --bg:#f5f2eb; --card:#fffdf8; --text:#2c2b28; --muted:#77736d; --line:#e4dfd6;
@@ -22,6 +22,26 @@
 [data-theme="library"]{
   --bg:#171c19; --card:#202722; --text:#f4efe6; --muted:#bdb7aa; --line:#394139;
   --accent:#6f8a75; --accent2:#9cad9a; --soft:#2b342d; --good:#2e4736; --warn:#51452d; --bad:#503334;
+}
+[data-theme="ocean"]{
+  --bg:#eef9fb; --card:#ffffff; --text:#18343b; --muted:#648089; --line:#d2e8ec;
+  --accent:#2c8fa3; --accent2:#63c6c5; --soft:#dff3f5; --good:#dff1e5; --warn:#fff0cf; --bad:#f7dfe2;
+}
+[data-theme="lavender"]{
+  --bg:#f7f2fb; --card:#fffaff; --text:#352b42; --muted:#7d6e8d; --line:#e7d9ef;
+  --accent:#8b6bb3; --accent2:#c29ad9; --soft:#eee3f6; --good:#e4f1e7; --warn:#f7ead2; --bad:#f3dde7;
+}
+[data-theme="sunset"]{
+  --bg:#fff6ef; --card:#fffdfa; --text:#432d28; --muted:#866c64; --line:#f0ddd2;
+  --accent:#e67e5f; --accent2:#f2b35d; --soft:#fde8d8; --good:#e6f2e6; --warn:#fff0c9; --bad:#f7dadd;
+}
+[data-theme="berry"]{
+  --bg:#fff2f7; --card:#fffafd; --text:#422738; --muted:#85697a; --line:#eed8e4;
+  --accent:#c84f87; --accent2:#7b65c8; --soft:#f4ddeb; --good:#e2f0e6; --warn:#f8e9cf; --bad:#f4d9df;
+}
+[data-theme="candy"]{
+  --bg:#fff9fc; --card:#ffffff; --text:#3c3440; --muted:#807383; --line:#eee1eb;
+  --accent:#ef6fa8; --accent2:#6fcad7; --soft:#fce7f1; --good:#e2f3ec; --warn:#fff1cf; --bad:#f7dce7;
 }
 *{box-sizing:border-box}
 html,body{min-height:100%}
@@ -81,7 +101,16 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
   <div class="topline">
     <div><h1>💰 Sabrinas Budget</h1><div class="muted">Deine kleine Budget-App</div></div>
     <div class="themeBox"><label>🎨 Design</label>
-      <select id="theme"><option value="sage">🌿 Salbei</option><option value="bordeaux">🍷 Bordeaux</option><option value="library">🌙 Dark Library</option></select>
+      <select id="theme">
+        <option value="sage">🌿 Salbei</option>
+        <option value="bordeaux">🍷 Bordeaux</option>
+        <option value="library">🌙 Dark Library</option>
+        <option value="ocean">🌊 Ocean</option>
+        <option value="lavender">💜 Lavendel</option>
+        <option value="sunset">🌅 Sunset</option>
+        <option value="berry">🍓 Berry</option>
+        <option value="candy">🍬 Pastell Candy</option>
+      </select>
     </div>
   </div>
 
@@ -193,7 +222,7 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
     </div>
   </div>
 
-  <div class="footer">Deine Daten werden lokal auf deinem iPhone gespeichert. Ausgaben können gelöscht werden; eigene Kategorien, Sparverlauf und Monatsdaten bleiben ebenfalls lokal erhalten.</div>
+  <div class="footer">Deine Daten werden lokal auf deinem iPhone gespeichert. E-Bike und Gravel sind getrennt versichert, und du kannst zwischen mehreren Farbdesigns wechseln.</div>
 </div>
 
 <script>
@@ -204,7 +233,7 @@ const euro=new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
 const defaultsEmoji={
   'Zigaretten':'🚬','Sparen':'💰','Alltag & Kleinkram':'🛍️','Freizeit / Bücher / Spaß':'📚',
   'Essen gehen / unterwegs':'🍽️','Puffer':'🛟','Gemeinschaftskonto':'🏠','LEAF':'📦',
-  'Versicherungen':'🛡️','Apple Music':'🎵','iCloud':'☁️','Staatsanwaltschaft':'⚖️',
+  'E-Bike-Versicherung':'🚲','Gravel-Versicherung':'🚴','Apple Music':'🎵','iCloud':'☁️','Staatsanwaltschaft':'⚖️',
   'Amazon Prime':'📦','BookBeat':'🎧','Crunchyroll':'🍥','WOW':'📺','Handy':'📱',
   'Urlaubsgeld Gemeinschaftskonto':'✈️'
 };
@@ -212,13 +241,13 @@ const defaultsEmoji={
 const templates={
 '2026-10':{
  income:1300,savingGoal:50,savedActual:0,
- fixed:[['Gemeinschaftskonto',726],['LEAF',18],['Versicherungen',18.70],['Apple Music',10.99],['iCloud',2.99],['Staatsanwaltschaft',50],['Amazon Prime',8.99],['BookBeat',14.99],['Crunchyroll',4.49],['WOW',2.98],['Handy',55]],
+ fixed:[['Gemeinschaftskonto',726],['LEAF',18],['E-Bike-Versicherung',6.98],['Gravel-Versicherung',11.72],['Apple Music',10.99],['iCloud',2.99],['Staatsanwaltschaft',50],['Amazon Prime',8.99],['BookBeat',14.99],['Crunchyroll',4.49],['WOW',2.98],['Handy',55]],
  budgets:[['Zigaretten',104,0],['Sparen',50,.50],['Alltag & Kleinkram',80,.20],['Freizeit / Bücher / Spaß',50,.15],['Essen gehen / unterwegs',30,.10],['Puffer',29.02,.05]],
  expenses:[]
 },
 '2026-11':{
  income:1300,savingGoal:50,savedActual:0,
- fixed:[['Gemeinschaftskonto',700],['Urlaubsgeld Gemeinschaftskonto',50],['Versicherungen',18.70],['Apple Music',10.99],['iCloud',2.99],['Staatsanwaltschaft',50],['Amazon Prime',8.99],['BookBeat',14.99],['Crunchyroll',4.49],['WOW',2.98],['Handy',10]],
+ fixed:[['Gemeinschaftskonto',700],['Urlaubsgeld Gemeinschaftskonto',50],['E-Bike-Versicherung',6.98],['Gravel-Versicherung',11.72],['Apple Music',10.99],['iCloud',2.99],['Staatsanwaltschaft',50],['Amazon Prime',8.99],['BookBeat',14.99],['Crunchyroll',4.49],['WOW',2.98],['Handy',10]],
  budgets:[['Zigaretten',104,0],['Sparen',50,.50],['Alltag & Kleinkram',80,.20],['Freizeit / Bücher / Spaß',50,.15],['Essen gehen / unterwegs',30,.10],['Puffer',29.02,.05]],
  expenses:[]
 }
@@ -239,9 +268,9 @@ function defaultCalendar(key,s){
  return [
    {name:'Gemeinschaftskonto',amount:shared,day:1,approx:true,fixedName:'Gemeinschaftskonto'},
    {name:'LEAF',amount:leaf,day:1,approx:true,fixedName:'LEAF'},
-   {name:'Versicherung 1',amount:6.98,day:5,approx:true,fixedName:'Versicherungen'},
+   {name:'E-Bike-Versicherung',amount:6.98,day:5,approx:true,fixedName:'E-Bike-Versicherung'},
    {name:'Handy',amount:hand,day:13,approx:true,fixedName:'Handy'},
-   {name:'Versicherung 2',amount:11.72,day:15,approx:true,fixedName:'Versicherungen'},
+   {name:'Gravel-Versicherung',amount:11.72,day:15,approx:true,fixedName:'Gravel-Versicherung'},
    {name:'Staatsanwaltschaft',amount:stateAmt,day:16,approx:true,fixedName:'Staatsanwaltschaft'},
    {name:'Amazon Prime',amount:prime,day:23,approx:true,fixedName:'Amazon Prime'},
    {name:'iCloud',amount:icloud,day:26,approx:true,fixedName:'iCloud'},
@@ -279,6 +308,44 @@ if(!db.migrations.v4RemoveDemo){
  });
  db.migrations.v4RemoveDemo=true;
 }
+
+// V5 migration: split combined insurance into E-Bike + Gravel.
+if(!db.migrations.v5SplitInsurance){
+ Object.values(db.months).forEach(s=>{
+   if(Array.isArray(s.fixed)){
+     const oldIndex=s.fixed.findIndex(f=>f.name==='Versicherungen');
+     if(oldIndex>=0){
+       const old=s.fixed[oldIndex];
+       const done=!!old.done;
+       s.fixed.splice(oldIndex,1,
+         {name:'E-Bike-Versicherung',amount:6.98,done},
+         {name:'Gravel-Versicherung',amount:11.72,done}
+       );
+     }else{
+       if(!s.fixed.some(f=>f.name==='E-Bike-Versicherung')){
+         s.fixed.push({name:'E-Bike-Versicherung',amount:6.98,done:false});
+       }
+       if(!s.fixed.some(f=>f.name==='Gravel-Versicherung')){
+         s.fixed.push({name:'Gravel-Versicherung',amount:11.72,done:false});
+       }
+     }
+   }
+
+   if(Array.isArray(s.calendar)){
+     s.calendar.forEach(item=>{
+       if(item.fixedName==='Versicherungen' && Number(item.amount)===6.98){
+         item.name='E-Bike-Versicherung';
+         item.fixedName='E-Bike-Versicherung';
+       }
+       if(item.fixedName==='Versicherungen' && Number(item.amount)===11.72){
+         item.name='Gravel-Versicherung';
+         item.fixedName='Gravel-Versicherung';
+       }
+     });
+   }
+ });
+ db.migrations.v5SplitInsurance=true;
+}
 // Ensure new V4 fields exist in older saved months.
 Object.entries(db.months).forEach(([key,s])=>{
  if(typeof s.savedActual!=='number')s.savedActual=0;
@@ -308,7 +375,7 @@ const $=id=>document.getElementById(id);
 
 function applyTheme(){
  document.documentElement.dataset.theme=db.settings.theme==='sage'?'':db.settings.theme;$('theme').value=db.settings.theme;
- const colors={sage:'#758a72',bordeaux:'#8b4e59',library:'#6f8a75'};document.querySelector('meta[name="theme-color"]').setAttribute('content',colors[db.settings.theme]||colors.sage)
+ const colors={sage:'#758a72',bordeaux:'#8b4e59',library:'#6f8a75',ocean:'#2c8fa3',lavender:'#8b6bb3',sunset:'#e67e5f',berry:'#c84f87',candy:'#ef6fa8'};document.querySelector('meta[name="theme-color"]').setAttribute('content',colors[db.settings.theme]||colors.sage)
 }
 function renderMonths(){
  $('month').innerHTML='';Object.keys(db.months).sort().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);if(k===db.active)o.selected=true;$('month').appendChild(o)})
