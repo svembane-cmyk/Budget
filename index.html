@@ -144,6 +144,19 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
 .expense{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:10px 0}.expense:first-child{border-top:0}
 .expenseActions{display:flex;align-items:center;gap:8px;flex-shrink:0}.deleteBtn{padding:7px 9px;font-size:14px}
 .footer{font-size:11px;color:var(--muted);line-height:1.45;margin-top:15px}
+.arrangeBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
+.arrangeBar button{padding:9px 12px}
+.arrangeHint{font-size:11px;color:var(--muted);text-align:right}
+.blockTools{display:none;align-items:center;justify-content:flex-end;gap:6px;margin:-4px 0 9px}
+.blockTools button{min-width:42px;min-height:42px;padding:7px 9px;font-size:17px;line-height:1}
+.blockTools .dragHandle{cursor:grab;touch-action:none;font-size:19px}
+.blockTools .dragHandle:active{cursor:grabbing}
+.arrangeMode [data-block-id]{outline:2px dashed color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:2px}
+.arrangeMode .blockTools{display:flex}
+[data-block-id].dragging{opacity:.72;transform:scale(.99)}
+.sortableZone{display:contents}
+@media(max-width:390px){.arrangeBar{align-items:flex-start}.arrangeHint{max-width:150px}}
+
 textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;padding:11px;font:inherit}
 .summaryGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .summaryItem{background:var(--soft);border-radius:14px;padding:11px}
@@ -190,22 +203,24 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
 
   
 
-  <div class="card hero">
-    <div class="muted">Heute noch verfügbar</div>
-    <div id="todayAvailable" class="big">0,00 €</div>
-    <div id="todayText" class="muted"></div>
-    <div class="bar" style="background:rgba(255,255,255,.25)"><div id="monthBar" style="background:white"></div></div>
-    <div class="progressline"><span id="monthProgressText"></span><span id="daysLeftText"></span></div>
-  </div>
-
-  <div class="card">
-    <div style="display:flex;gap:10px;align-items:end">
-      <div style="flex:1"><label>📅 Monat</label><select id="month"></select></div>
-      <div style="flex:1"><label>💵 Einkommen</label><input id="income" inputmode="decimal"></div>
+  <div class="sortableZone" data-zone="top">
+    <div class="card hero" data-block-id="today">
+      <div class="muted">Heute noch verfügbar</div>
+      <div id="todayAvailable" class="big">0,00 €</div>
+      <div id="todayText" class="muted"></div>
+      <div class="bar" style="background:rgba(255,255,255,.25)"><div id="monthBar" style="background:white"></div></div>
+      <div class="progressline"><span id="monthProgressText"></span><span id="daysLeftText"></span></div>
     </div>
-    <div class="grid2" style="margin-top:12px">
-      <div class="stat"><span class="muted">🏦 Fixkosten offen</span><b id="openFixed">0 €</b><span id="openCount" class="small muted"></span></div>
-      <div class="stat"><span class="muted">✨ Frei nach Planung</span><b id="free">0 €</b><span class="small muted">nach allen Töpfen</span></div>
+
+    <div class="card" data-block-id="month-status">
+      <div style="display:flex;gap:10px;align-items:end">
+        <div style="flex:1"><label>📅 Monat</label><select id="month"></select></div>
+        <div style="flex:1"><label>💵 Einkommen</label><input id="income" inputmode="decimal"></div>
+      </div>
+      <div class="grid2" style="margin-top:12px">
+        <div class="stat"><span class="muted">🏦 Fixkosten offen</span><b id="openFixed">0 €</b><span id="openCount" class="small muted"></span></div>
+        <div class="stat"><span class="muted">✨ Frei nach Planung</span><b id="free">0 €</b><span class="small muted">nach allen Töpfen</span></div>
+      </div>
     </div>
   </div>
 
@@ -215,9 +230,13 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     <button data-tab="calendar">Kalender</button>
     <button data-tab="expenses">Ausgaben</button>
   </div>
+  <div class="arrangeBar">
+    <button id="toggleArrange" type="button">↕ Blöcke sortieren</button>
+    <span id="arrangeHint" class="arrangeHint">Reihenfolge bleibt gespeichert.</span>
+  </div>
 
-  <section id="overview" class="panel">
-    <div class="card">
+  <section id="overview" class="panel sortableZone" data-zone="overview">
+    <div class="card" data-block-id="summary">
       <div class="sectionTitle">
         <div><b>📊 Monatszusammenfassung</b><div class="muted">Auf einen Blick</div></div>
         <span id="monthSummaryLabel" class="pill"></span>
@@ -233,14 +252,14 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div id="topCategory" class="msg"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-block-id="notes">
       <b>📝 Monatsnotizen</b>
       <div class="muted">Alles, was du für diesen Monat festhalten möchtest.</div>
       <textarea id="monthNotes" placeholder="z. B. Diesen Monat weniger bestellen, Urlaubsgeld zurücklegen …"></textarea>
       <div id="notesStatus" class="msg"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-block-id="goals">
       <div class="sectionTitle">
         <div><b>🎯 Meine Sparziele</b><div class="muted">Langfristige Ziele über mehrere Monate</div></div>
         <span id="goalTotal" class="pill"></span>
@@ -258,7 +277,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" data-block-id="savings">
       <div class="sectionTitle">
         <div><b>🎯 Sparen</b><div class="muted">Plan und tatsächlich gespart</div></div>
         <span id="savedTotal" class="pill"></span>
@@ -272,7 +291,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div id="savingsHistory"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-block-id="budget-pots">
       <div class="sectionTitle"><b>🧺 Budget-Töpfe</b><span id="budgetUsage" class="pill"></span></div>
       <div id="budgets"></div>
     </div>
@@ -286,20 +305,20 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </section>
 
-  <section id="calendar" class="panel hidden">
-    <div class="card">
+  <section id="calendar" class="panel hidden sortableZone" data-zone="calendar">
+    <div class="card" data-block-id="payment-calendar">
       <div class="sectionTitle"><div><b>🗓️ Zahlungskalender</b><div class="muted">Erwartete Abbuchungen im ausgewählten Monat</div></div><span id="calendarSum" class="pill"></span></div>
       <div class="calendarGrid" id="calendarGrid"></div>
     </div>
-    <div class="card">
+    <div class="card" data-block-id="payment-list">
       <b>📤 Erwartete Zahlungsausgänge</b>
       <div class="muted">„ca.“ bedeutet: Der Tag kann sich leicht verschieben.</div>
       <div id="calendarList" style="margin-top:8px"></div>
     </div>
   </section>
 
-  <section id="expenses" class="panel hidden">
-    <div class="card">
+  <section id="expenses" class="panel hidden sortableZone" data-zone="expenses">
+    <div class="card" data-block-id="add-expense">
       <b>➕ Ausgabe eintragen</b>
       <label>Kategorie</label><select id="category"></select>
       <label>Betrag</label><input id="amount" inputmode="decimal" placeholder="0,00">
@@ -308,7 +327,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div id="msg" class="msg"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-block-id="custom-categories">
       <b>🏷️ Eigene Kategorie hinzufügen</b>
       <div class="muted">Sie bleibt erhalten und wird in neue Monate übernommen.</div>
       <div class="inline3" style="margin-top:10px">
@@ -321,7 +340,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div id="customCategories" style="margin-top:9px"></div>
     </div>
 
-    <div class="card">
+    <div class="card" data-block-id="latest-expenses">
       <div class="sectionTitle"><b>🧾 Letzte Ausgaben</b><span id="spentTotal" class="pill"></span></div>
       <div id="expenseList"></div>
     </div>
@@ -447,6 +466,7 @@ if(!db||!db.months){
 if(!db.settings)db.settings={theme:'sage',font:'modern'};
 if(!db.settings.theme)db.settings.theme='sage';
 if(!db.settings.font)db.settings.font='modern';
+if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};
 
 // V4 migration: remove ONLY the old demo cigarette entry; preserve the user's own real entries.
 if(!db.migrations)db.migrations={};
@@ -654,9 +674,89 @@ function renderGoals(){
  });
 }
 
-function renderAll(){applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar()}
+
+function zoneBlocks(zone){
+ return Array.from(zone.children).filter(x=>x.hasAttribute && x.hasAttribute('data-block-id'));
+}
+function saveBlockOrder(zone){
+ const name=zone.dataset.zone;if(!name)return;
+ db.settings.blockOrder[name]=zoneBlocks(zone).map(x=>x.dataset.blockId);
+ save();
+}
+function applyBlockOrder(){
+ document.querySelectorAll('.sortableZone[data-zone]').forEach(zone=>{
+   const order=(db.settings.blockOrder&&db.settings.blockOrder[zone.dataset.zone])||[];
+   const byId=new Map(zoneBlocks(zone).map(x=>[x.dataset.blockId,x]));
+   order.forEach(id=>{const el=byId.get(id);if(el){zone.appendChild(el);byId.delete(id)}});
+   byId.forEach(el=>zone.appendChild(el));
+ });
+}
+function moveBlock(block,dir){
+ const zone=block.parentElement;
+ const blocks=zoneBlocks(zone);
+ const i=blocks.indexOf(block);
+ if(dir<0&&i>0)zone.insertBefore(block,blocks[i-1]);
+ if(dir>0&&i>=0&&i<blocks.length-1)zone.insertBefore(blocks[i+1],block);
+ saveBlockOrder(zone);
+}
+function initBlockReorder(){
+ document.querySelectorAll('[data-block-id]').forEach(block=>{
+   if(block.querySelector(':scope > .blockTools'))return;
+   const tools=document.createElement('div');tools.className='blockTools';tools.setAttribute('aria-label','Block verschieben');
+   const up=document.createElement('button');up.type='button';up.textContent='↑';up.title='Nach oben';up.setAttribute('aria-label','Block nach oben verschieben');
+   const handle=document.createElement('button');handle.type='button';handle.className='dragHandle';handle.textContent='☰';handle.title='Ziehen zum Verschieben';handle.setAttribute('aria-label','Block ziehen zum Verschieben');
+   const down=document.createElement('button');down.type='button';down.textContent='↓';down.title='Nach unten';down.setAttribute('aria-label','Block nach unten verschieben');
+   up.addEventListener('click',()=>moveBlock(block,-1));
+   down.addEventListener('click',()=>moveBlock(block,1));
+
+   let dragging=false,pointerId=null,moved=false;
+   handle.addEventListener('pointerdown',e=>{
+     if(!document.body.classList.contains('arrangeMode'))return;
+     dragging=true;moved=false;pointerId=e.pointerId;
+     block.classList.add('dragging');
+     try{handle.setPointerCapture(pointerId)}catch(_){}
+     e.preventDefault();
+   });
+   handle.addEventListener('pointermove',e=>{
+     if(!dragging)return;
+     moved=true;e.preventDefault();
+     const zone=block.parentElement;
+     const hit=document.elementFromPoint(e.clientX,e.clientY);
+     const target=hit&&hit.closest?hit.closest('[data-block-id]'):null;
+     if(target&&target!==block&&target.parentElement===zone){
+       const r=target.getBoundingClientRect();
+       if(e.clientY<r.top+r.height/2)zone.insertBefore(block,target);
+       else zone.insertBefore(block,target.nextSibling);
+     }
+     const edge=70;
+     if(e.clientY<edge)window.scrollBy(0,-12);
+     else if(e.clientY>window.innerHeight-edge)window.scrollBy(0,12);
+   });
+   const endDrag=e=>{
+     if(!dragging)return;
+     dragging=false;block.classList.remove('dragging');
+     try{if(pointerId!==null)handle.releasePointerCapture(pointerId)}catch(_){}
+     pointerId=null;
+     if(moved)saveBlockOrder(block.parentElement);
+   };
+   handle.addEventListener('pointerup',endDrag);
+   handle.addEventListener('pointercancel',endDrag);
+   tools.append(up,handle,down);
+   block.insertBefore(tools,block.firstChild);
+ });
+ applyBlockOrder();
+}
+
+function renderAll(){applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
+let arrangeMode=false;
+$('toggleArrange').onclick=()=>{
+ arrangeMode=!arrangeMode;
+ document.body.classList.toggle('arrangeMode',arrangeMode);
+ $('toggleArrange').textContent=arrangeMode?'✓ Sortieren fertig':'↕ Blöcke sortieren';
+ $('arrangeHint').textContent=arrangeMode?'Am ☰ ziehen oder ↑ / ↓ tippen.':'Reihenfolge bleibt gespeichert.';
+};
 $('theme').onchange=e=>{db.settings.theme=e.target.value;save();applyTheme()};
 $('font').onchange=e=>{db.settings.font=e.target.value;save();applyFont()};
 $('month').onchange=e=>{db.active=e.target.value;save();renderAll()};
@@ -684,8 +784,9 @@ $('cleanMonth').onclick=()=>{if(!confirm('Wirklich komplett neu starten?\\n\\nAl
 $('exportBackup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Sabrina-Budget-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('importBackup').onclick=()=>$('backupFile').click();
 $('backupFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;if(!db.settings)db.settings={theme:'sage',font:'modern'};
-if(!db.settings.font)db.settings.font='modern';Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'})});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
+if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'})});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
 $('newMonth').onclick=()=>{const ks=Object.keys(db.months).sort(),last=ks[ks.length-1],[y,m]=last.split('-').map(Number),d=new Date(y,m,1),key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(db.months[key]){db.active=key;save();renderAll();return}const prev=db.months[last],s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,fixed:prev.fixed.map(x=>({...x,done:false})),budgets:prev.budgets.map(x=>({...x,spent:0})),expenses:[]};s.calendar=defaultCalendar(key,s);db.months[key]=s;db.active=key;save();renderAll()};
+initBlockReorder();
 renderAll();
 })();
 </script>

@@ -1,28 +1,34 @@
-Sabrinas Budget PWA – Version 12
+Sabrinas Budget PWA – Version 13
 
 NEU:
-- ✏️ Ausgaben bearbeiten
-- 📝 Monatsnotizen mit automatischer Speicherung
-- 🎯 Benannte Sparziele über mehrere Monate
-- 📊 Monatszusammenfassung
-  - Einkommen
-  - Ausgaben
-  - Fixkosten erledigt/offen
-  - tatsächlich gespart
-  - flexibel übrig
-  - größte Ausgabenkategorie
+- ↕ Blöcke frei sortieren
+- Auf „Blöcke sortieren“ tippen
+- Auf dem iPhone einen Block am ☰-Griff ziehen
+- Alternativ ↑ / ↓ benutzen
+- Mit „Sortieren fertig“ den Modus beenden
+- Die Reihenfolge wird automatisch gespeichert
+
+SORTIERBAR:
+- die beiden oberen Übersichtsblöcke
+- alle Blöcke der Übersicht
+- die beiden Kalender-Blöcke
+- alle Ausgaben-Blöcke
+
+Fixkosten enthalten aktuell nur einen einzelnen Block und brauchen deshalb keine Sortierung.
+„Neustart & Backup“ und „Design“ bleiben bewusst unten als Einstellungen.
 
 WEITERHIN ENTHALTEN:
+- Monatszusammenfassung
+- Monatsnotizen
+- Sparziele
+- Ausgaben bearbeiten
 - eigene Kategorien
 - Zahlungskalender
 - Sparverlauf
-- Ausgaben löschen
-- kompletter Monatsneustart
-- Designs + Schriftarten ganz unten
-- Checkerboard-Retro-Design
-- Checkerboard-Budget-App-Icon
+- Designs + Schriftarten
+- Checkerboard-Retro-Design und App-Icon
 
-Bestehende Daten bleiben erhalten.
+Bestehende Budgetdaten bleiben erhalten.
 
 GITHUB-UPDATE:
 Im selben Repository hochladen/ersetzen:
