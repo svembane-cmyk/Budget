@@ -1,32 +1,26 @@
-Sabrinas Budget PWA – Version 13
+Sabrinas Budget PWA – Version 16
 
 NEU:
-- ↕ Blöcke frei sortieren
-- Auf „Blöcke sortieren“ tippen
-- Auf dem iPhone einen Block am ☰-Griff ziehen
-- Alternativ ↑ / ↓ benutzen
-- Mit „Sortieren fertig“ den Modus beenden
-- Die Reihenfolge wird automatisch gespeichert
+Zusätzliche Designs:
+- 📚 Bookish Dark Academia
+- 🩷 Barbie Pop
+- 🍵 Matcha Café
+- 🌌 Night Sky
+- 🎃 Halloween Cozy
 
-SORTIERBAR:
-- die beiden oberen Übersichtsblöcke
-- alle Blöcke der Übersicht
-- die beiden Kalender-Blöcke
-- alle Ausgaben-Blöcke
-
-Fixkosten enthalten aktuell nur einen einzelnen Block und brauchen deshalb keine Sortierung.
-„Neustart & Backup“ und „Design“ bleiben bewusst unten als Einstellungen.
+Alle bisherigen Designs bleiben natürlich ebenfalls erhalten.
 
 WEITERHIN ENTHALTEN:
+- Design + Schriftarten ganz unten
+- Blöcke sortieren
 - Monatszusammenfassung
 - Monatsnotizen
 - Sparziele
-- Ausgaben bearbeiten
+- Ausgaben bearbeiten/löschen
 - eigene Kategorien
 - Zahlungskalender
 - Sparverlauf
-- Designs + Schriftarten
-- Checkerboard-Retro-Design und App-Icon
+- Checkerboard-App-Icon
 
 Bestehende Budgetdaten bleiben erhalten.
 
