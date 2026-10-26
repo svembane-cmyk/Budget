@@ -378,6 +378,16 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.full{grid-column:1/-1}
 .expense{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:10px 0}.expense:first-child{border-top:0}
 .expenseActions{display:flex;align-items:center;gap:8px;flex-shrink:0}.deleteBtn{padding:7px 9px;font-size:14px}
+.monthControls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;align-items:center}
+.monthControls input{min-width:0}
+.fixedRow .left{flex:1;min-width:110px;overflow-wrap:anywhere}
+.fixedActions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.fixedActions button{padding:8px;font-size:13px}
+.fixedActions .fixedDone{min-width:71px}
+.fixedScope{display:flex;align-items:center;gap:9px;margin:14px 0 4px;font-size:13px;font-weight:600}
+.fixedScope input{width:18px;height:18px;accent-color:var(--accent);flex-shrink:0}
+.fixedEditorButtons{display:flex;gap:8px;margin-top:12px}
+.fixedEditorButtons button:first-child{flex:1}
 .footer{font-size:11px;color:var(--muted);line-height:1.45;margin-top:15px}
 .arrangeBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
 .arrangeBar button{padding:9px 12px}
@@ -451,6 +461,11 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div style="display:flex;gap:10px;align-items:end">
         <div style="flex:1"><label>📅 Monat</label><select id="month"></select></div>
         <div style="flex:1"><label>💵 Einkommen</label><input id="income" inputmode="decimal"></div>
+      </div>
+      <div class="monthControls">
+        <button id="nextMonth" type="button">＋ Folgemonat</button>
+        <input id="targetMonth" type="month" aria-label="Monat und Jahr wählen">
+        <button id="openMonth" type="button" style="grid-column:1/-1">Monat öffnen oder anlegen</button>
       </div>
       <div class="grid2" style="margin-top:12px">
         <div class="stat"><span class="muted">🏦 Fixkosten offen</span><b id="openFixed">0 €</b><span id="openCount" class="small muted"></span></div>
@@ -535,8 +550,23 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
   <section id="fixed" class="panel hidden">
     <div class="card">
       <b>🧾 Feste Abbuchungen</b>
-      <div class="muted">Tippe auf „Offen“, sobald das Geld abgebucht wurde.</div>
+      <div class="muted">Tippe auf „Offen“, sobald das Geld abgebucht wurde. Bearbeite oder lösche einzelne Posten über die Symbole.</div>
+      <label class="fixedScope"><input id="fixedFuture" type="checkbox" checked>Änderungen auch in bereits angelegte Folgemonate übernehmen</label>
       <div id="fixedList" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <b id="fixedEditorTitle">➕ Fixkosten hinzufügen</b>
+      <div class="grid2" style="margin-top:8px">
+        <div><label for="fixedName">Bezeichnung</label><input id="fixedName" placeholder="z. B. Miete" autocomplete="off"></div>
+        <div><label for="fixedAmount">Betrag in €</label><input id="fixedAmount" inputmode="decimal" placeholder="z. B. 34,99"></div>
+      </div>
+      <div><label for="fixedDay">Abbuchungstag (optional, 1–31)</label><input id="fixedDay" type="number" inputmode="numeric" min="1" max="31" placeholder="Unbekannt"></div>
+      <div class="fixedEditorButtons">
+        <button id="addFixed" class="primary">＋ Fixkosten hinzufügen</button>
+        <button id="cancelFixedEdit" class="hidden" type="button">Abbrechen</button>
+      </div>
+      <div id="fixedMsg" class="msg"></div>
+      <div class="muted" style="margin-top:6px">Neue Monate übernehmen die festen Kosten des zuletzt geplanten vorherigen Monats.</div>
     </div>
   </section>
 
@@ -589,7 +619,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <button id="exportBackup">Backup speichern</button>
       <button id="importBackup">Backup laden</button>
       <input id="backupFile" type="file" accept="application/json" class="hidden">
-      <button id="newMonth" class="full">Neuen Monat anlegen</button>
+      <button id="newMonth" class="full">Nächsten Monat anlegen</button>
     </div>
   </div>
 
@@ -673,32 +703,31 @@ const templates={
 }
 };
 
+const dueDayDefaults={
+ 'Gemeinschaftskonto':1,'LEAF':1,'E-Bike-Versicherung':5,'Handy':13,
+ 'Gravel-Versicherung':15,'Staatsanwaltschaft':16,'Amazon Prime':23,
+ 'iCloud':26,'BookBeat':29,'WOW':30
+};
 function defaultCalendar(key,s){
- const fixedAmt=n=>{const f=s.fixed.find(x=>x.name===n);return f?f.amount:0};
- const hand= fixedAmt('Handy');
- const shared=fixedAmt('Gemeinschaftskonto');
- const leaf=fixedAmt('LEAF');
- const stateAmt=fixedAmt('Staatsanwaltschaft');
- const prime=fixedAmt('Amazon Prime');
- const icloud=fixedAmt('iCloud');
- const book=fixedAmt('BookBeat');
- const wow=fixedAmt('WOW');
- const apple=fixedAmt('Apple Music');
- const crunchy=fixedAmt('Crunchyroll');
- return [
-   {name:'Gemeinschaftskonto',amount:shared,day:1,approx:true,fixedName:'Gemeinschaftskonto'},
-   {name:'LEAF',amount:leaf,day:1,approx:true,fixedName:'LEAF'},
-   {name:'E-Bike-Versicherung',amount:6.98,day:5,approx:true,fixedName:'E-Bike-Versicherung'},
-   {name:'Handy',amount:hand,day:13,approx:true,fixedName:'Handy'},
-   {name:'Gravel-Versicherung',amount:11.72,day:15,approx:true,fixedName:'Gravel-Versicherung'},
-   {name:'Staatsanwaltschaft',amount:stateAmt,day:16,approx:true,fixedName:'Staatsanwaltschaft'},
-   {name:'Amazon Prime',amount:prime,day:23,approx:true,fixedName:'Amazon Prime'},
-   {name:'iCloud',amount:icloud,day:26,approx:true,fixedName:'iCloud'},
-   {name:'BookBeat',amount:book,day:29,approx:true,fixedName:'BookBeat'},
-   {name:'WOW',amount:wow,day:30,approx:true,fixedName:'WOW'},
-   {name:'Apple Music',amount:apple,day:null,approx:true,fixedName:'Apple Music'},
-   {name:'Crunchyroll',amount:crunchy,day:null,approx:true,fixedName:'Crunchyroll'}
- ].filter(x=>x.amount>0);
+ return (s.fixed||[]).map(f=>({
+  name:f.name,amount:f.amount,
+  day:Object.prototype.hasOwnProperty.call(f,'day')?f.day:(dueDayDefaults[f.name]??null),
+  approx:true,fixedName:f.name
+ }));
+}
+function syncFixedCalendar(s){
+ if(!Array.isArray(s.fixed))s.fixed=[];
+ if(!Array.isArray(s.calendar))s.calendar=[];
+ const names=new Set(s.fixed.map(f=>f.name));
+ s.calendar=s.calendar.filter(c=>!c.fixedName||names.has(c.fixedName));
+ s.fixed.forEach(f=>{
+  const current=s.calendar.find(c=>c.fixedName===f.name);
+  if(!Object.prototype.hasOwnProperty.call(f,'day')){
+   f.day=current?(current.day??null):(dueDayDefaults[f.name]??null);
+  }
+  if(current){current.name=f.name;current.amount=Number(f.amount)||0;current.day=f.day;}
+  else s.calendar.push({name:f.name,amount:f.amount,day:f.day,approx:true,fixedName:f.name});
+ });
 }
 function inflate(t,key){
  const s={income:t.income,savingGoal:t.savingGoal,savedActual:t.savedActual||0,
@@ -780,12 +809,13 @@ Object.entries(db.months).forEach(([key,s])=>{
 if(!Array.isArray(db.savingsGoals)) db.savingsGoals=[];
 Object.values(db.months).forEach(s=>{
  if(typeof s.notes!=='string') s.notes='';
+ syncFixedCalendar(s);
 });
 save();
 
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
 function state(){return db.months[db.active]}
-function num(v){const n=Number(String(v).trim().replace(/\./g,'').replace(',','.'));return Number.isFinite(n)?n:NaN}
+function num(v){let raw=String(v).trim().replace(/\s/g,'');if(raw.includes(','))raw=raw.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(raw))raw=raw.replace(/\./g,'');const n=Number(raw);return raw!==''&&Number.isFinite(n)?n:NaN}
 function planned(b){return b.base+Math.max(0,state().income-BASE)*(b.extraShare||0)}
 function fixedTotal(){return state().fixed.reduce((s,x)=>s+x.amount,0)}
 function budgetTotal(){return state().budgets.reduce((s,x)=>s+planned(x),0)}
