@@ -847,7 +847,31 @@ function applyFont(){
  $('font').value=selected;
 }
 function renderMonths(){
- $('month').innerHTML='';Object.keys(db.months).sort().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);if(k===db.active)o.selected=true;$('month').appendChild(o)})
+ $('month').innerHTML='';
+ Object.keys(db.months).sort().forEach(k=>{
+  const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);
+  if(k===db.active)o.selected=true;
+  $('month').appendChild(o);
+ });
+ $('targetMonth').value=db.active;
+}
+function openOrCreateMonth(key){
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(key)){alert('Bitte einen gültigen Monat auswählen.');return;}
+ if(!db.months[key]){
+  const keys=Object.keys(db.months).sort(),sourceKey=keys.filter(k=>k<key).pop()||keys[0];
+  const prev=db.months[sourceKey];
+  const s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,
+    fixed:prev.fixed.map(f=>({...f,done:false})),
+    budgets:prev.budgets.map(b=>({...b,spent:0})),expenses:[],notes:''};
+  s.calendar=defaultCalendar(key,s);
+  syncFixedCalendar(s);
+  db.months[key]=s;
+ }
+ db.active=key;save();renderAll();
+}
+function nextMonthKey(key){
+ const [y,m]=key.split('-').map(Number),d=new Date(y,m,1);
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
 function renderTop(){
  syncSpent();$('income').value=String(state().income).replace('.',',');$('savedActual').value=String(state().savedActual||0).replace('.',',');
@@ -863,8 +887,56 @@ function renderSavings(){
  const max=Math.max(1,...months.map(k=>db.months[k].savedActual||0));$('savingsHistory').innerHTML='';
  months.forEach(k=>{const v=db.months[k].savedActual||0;const r=document.createElement('div');r.className='savingsBarRow';r.innerHTML='<span class="small"></span><div class="savingsTrack"><div class="savingsFill"></div></div><b class="small right"></b>';r.children[0].textContent=monthLabel(k);r.querySelector('.savingsFill').style.width=(v/max*100)+'%';r.querySelector('b').textContent=euro.format(v);$('savingsHistory').appendChild(r)})
 }
+let editingFixedName=null;
+function resetFixedEditor(){
+ editingFixedName=null;
+ $('fixedName').value='';$('fixedAmount').value='';$('fixedDay').value='';
+ $('fixedEditorTitle').textContent='➕ Fixkosten hinzufügen';
+ $('addFixed').textContent='＋ Fixkosten hinzufügen';
+ $('cancelFixedEdit').classList.add('hidden');
+}
+function affectedFixedMonths(){
+ return $('fixedFuture').checked?Object.keys(db.months).filter(k=>k>=db.active).sort():[db.active];
+}
 function renderFixed(){
- $('fixedList').innerHTML='';state().fixed.forEach((f,i)=>{const r=document.createElement('div');r.className='row';const l=document.createElement('div');l.className='left';l.innerHTML='<div class="name"></div><div class="sub"></div>';l.querySelector('.name').textContent=(defaultsEmoji[f.name]||'🧾')+' '+f.name;l.querySelector('.sub').textContent=euro.format(f.amount);const b=document.createElement('button');b.textContent=f.done?'Erledigt ✓':'Offen';if(f.done)b.classList.add('done');b.onclick=()=>{state().fixed[i].done=!state().fixed[i].done;save();renderAll()};r.append(l,b);$('fixedList').appendChild(r)})
+ $('fixedList').innerHTML='';
+ state().fixed.forEach((f,i)=>{
+  const r=document.createElement('div');r.className='row fixedRow';
+  const l=document.createElement('div');l.className='left';
+  l.innerHTML='<div class="name"></div><div class="sub"></div>';
+  l.querySelector('.name').textContent=(defaultsEmoji[f.name]||'🧾')+' '+f.name;
+  l.querySelector('.sub').textContent=euro.format(f.amount)+(f.day==null?'':' · Tag '+f.day);
+  const actions=document.createElement('div');actions.className='fixedActions';
+  const done=document.createElement('button');done.className='fixedDone';
+  done.textContent=f.done?'Erledigt ✓':'Offen';if(f.done)done.classList.add('done');
+  done.onclick=()=>{state().fixed[i].done=!state().fixed[i].done;save();renderAll()};
+  const edit=document.createElement('button');edit.className='deleteBtn';edit.textContent='✏️';edit.title='Fixkosten bearbeiten';
+  edit.onclick=()=>{
+   editingFixedName=f.name;
+   $('fixedName').value=f.name;
+   $('fixedAmount').value=String(f.amount).replace('.',',');
+   $('fixedDay').value=f.day==null?'':String(f.day);
+   $('fixedEditorTitle').textContent='✏️ Fixkosten bearbeiten';
+   $('addFixed').textContent='Änderungen speichern';
+   $('cancelFixedEdit').classList.remove('hidden');
+   $('fixedMsg').textContent='Bearbeitung: '+f.name;
+   $('fixedName').focus();
+  };
+  const del=document.createElement('button');del.className='deleteBtn';del.textContent='🗑️';del.title='Fixkosten löschen';
+  del.onclick=()=>{
+   const scope=$('fixedFuture').checked?'in diesem und allen bereits angelegten späteren Monaten':'nur in diesem Monat';
+   if(!confirm('„'+f.name+'“ wirklich '+scope+' löschen?'))return;
+   affectedFixedMonths().forEach(k=>{
+    const month=db.months[k];
+    month.fixed=month.fixed.filter(x=>x.name.toLocaleLowerCase('de-DE')!==f.name.toLocaleLowerCase('de-DE'));
+    syncFixedCalendar(month);
+   });
+   if(editingFixedName===f.name)resetFixedEditor();
+   save();renderAll();$('fixedMsg').textContent='Fixkosten gelöscht ✓';
+  };
+  actions.append(done,edit,del);r.append(l,actions);$('fixedList').appendChild(r);
+ });
+ if(!state().fixed.length)$('fixedList').innerHTML='<div class="msg">Noch keine Fixkosten. Füge unten deinen ersten Posten hinzu.</div>';
 }
 function renderBudgets(){
  syncSpent();$('budgets').innerHTML='';let spent=0,total=0;state().budgets.forEach(b=>{const t=planned(b),left=t-b.spent,pct=t?Math.min(100,Math.max(0,b.spent/t*100)):0;spent+=b.spent;total+=t;const d=document.createElement('div');d.className='budget';d.innerHTML='<div class="budgethead"><div><b></b><div class="sub"></div></div><div class="right"><b></b><div class="sub">übrig</div></div></div><div class="bar"><div></div></div>';d.querySelector('.budgethead>div:first-child b').textContent=em(b)+' '+b.name;d.querySelector('.budgethead>div:first-child .sub').textContent='Budget '+euro.format(t)+' · ausgegeben '+euro.format(b.spent);d.querySelector('.right b').textContent=euro.format(left);d.querySelector('.bar>div').style.width=pct+'%';$('budgets').appendChild(d)});$('budgetUsage').textContent=total?Math.round(spent/total*100)+' % genutzt':'0 % genutzt'
@@ -894,8 +966,8 @@ function renderCalendar(){
  $('calendarGrid').innerHTML='';['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(x=>{const h=document.createElement('div');h.className='calHead';h.textContent=x;$('calendarGrid').appendChild(h)});
  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='day empty';$('calendarGrid').appendChild(e)}
  const now=new Date();
- for(let d=1;d<=total;d++){const el=document.createElement('div');el.className='day';el.textContent=d;const has=items.some(x=>x.day===d);if(has){el.classList.add('hasPay');const dot=document.createElement('div');dot.className='dot';el.appendChild(dot)}if(now.getFullYear()===y&&now.getMonth()+1===m&&now.getDate()===d)el.classList.add('today');$('calendarGrid').appendChild(el)}
- $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(defaultsEmoji[x.fixedName]||'📤')+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(x.day).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=euro.format(x.amount);r.append(l,a);$('calendarList').appendChild(r)});
+ for(let d=1;d<=total;d++){const el=document.createElement('div');el.className='day';el.textContent=d;const has=items.some(x=>x.day!=null&&Math.min(x.day,total)===d);if(has){el.classList.add('hasPay');const dot=document.createElement('div');dot.className='dot';el.appendChild(dot)}if(now.getFullYear()===y&&now.getMonth()+1===m&&now.getDate()===d)el.classList.add('today');$('calendarGrid').appendChild(el)}
+ $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(defaultsEmoji[x.fixedName]||'📤')+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(Math.min(x.day,total)).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=euro.format(x.amount);r.append(l,a);$('calendarList').appendChild(r)});
  $('calendarSum').textContent=euro.format(items.reduce((s,x)=>s+x.amount,0))
 }
 
