@@ -378,6 +378,16 @@ label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.full{grid-column:1/-1}
 .expense{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding:10px 0}.expense:first-child{border-top:0}
 .expenseActions{display:flex;align-items:center;gap:8px;flex-shrink:0}.deleteBtn{padding:7px 9px;font-size:14px}
+.monthControls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;align-items:center}
+.monthControls input{min-width:0}
+.fixedRow .left{flex:1;min-width:110px;overflow-wrap:anywhere}
+.fixedActions{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.fixedActions button{padding:8px;font-size:13px}
+.fixedActions .fixedDone{min-width:71px}
+.fixedScope{display:flex;align-items:center;gap:9px;margin:14px 0 4px;font-size:13px;font-weight:600}
+.fixedScope input{width:18px;height:18px;accent-color:var(--accent);flex-shrink:0}
+.fixedEditorButtons{display:flex;gap:8px;margin-top:12px}
+.fixedEditorButtons button:first-child{flex:1}
 .footer{font-size:11px;color:var(--muted);line-height:1.45;margin-top:15px}
 .arrangeBar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px}
 .arrangeBar button{padding:9px 12px}
@@ -451,6 +461,11 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div style="display:flex;gap:10px;align-items:end">
         <div style="flex:1"><label>📅 Monat</label><select id="month"></select></div>
         <div style="flex:1"><label>💵 Einkommen</label><input id="income" inputmode="decimal"></div>
+      </div>
+      <div class="monthControls">
+        <button id="nextMonth" type="button">＋ Folgemonat</button>
+        <input id="targetMonth" type="month" aria-label="Monat und Jahr wählen">
+        <button id="openMonth" type="button" style="grid-column:1/-1">Monat öffnen oder anlegen</button>
       </div>
       <div class="grid2" style="margin-top:12px">
         <div class="stat"><span class="muted">🏦 Fixkosten offen</span><b id="openFixed">0 €</b><span id="openCount" class="small muted"></span></div>
@@ -535,8 +550,23 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
   <section id="fixed" class="panel hidden">
     <div class="card">
       <b>🧾 Feste Abbuchungen</b>
-      <div class="muted">Tippe auf „Offen“, sobald das Geld abgebucht wurde.</div>
+      <div class="muted">Tippe auf „Offen“, sobald das Geld abgebucht wurde. Bearbeite oder lösche einzelne Posten über die Symbole.</div>
+      <label class="fixedScope"><input id="fixedFuture" type="checkbox" checked>Änderungen auch in bereits angelegte Folgemonate übernehmen</label>
       <div id="fixedList" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <b id="fixedEditorTitle">➕ Fixkosten hinzufügen</b>
+      <div class="grid2" style="margin-top:8px">
+        <div><label for="fixedName">Bezeichnung</label><input id="fixedName" placeholder="z. B. Miete" autocomplete="off"></div>
+        <div><label for="fixedAmount">Betrag in €</label><input id="fixedAmount" inputmode="decimal" placeholder="z. B. 34,99"></div>
+      </div>
+      <div><label for="fixedDay">Abbuchungstag (optional, 1–31)</label><input id="fixedDay" type="number" inputmode="numeric" min="1" max="31" placeholder="Unbekannt"></div>
+      <div class="fixedEditorButtons">
+        <button id="addFixed" class="primary">＋ Fixkosten hinzufügen</button>
+        <button id="cancelFixedEdit" class="hidden" type="button">Abbrechen</button>
+      </div>
+      <div id="fixedMsg" class="msg"></div>
+      <div class="muted" style="margin-top:6px">Neue Monate übernehmen die festen Kosten des zuletzt geplanten vorherigen Monats.</div>
     </div>
   </section>
 
@@ -589,7 +619,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <button id="exportBackup">Backup speichern</button>
       <button id="importBackup">Backup laden</button>
       <input id="backupFile" type="file" accept="application/json" class="hidden">
-      <button id="newMonth" class="full">Neuen Monat anlegen</button>
+      <button id="newMonth" class="full">Nächsten Monat anlegen</button>
     </div>
   </div>
 
@@ -673,32 +703,31 @@ const templates={
 }
 };
 
+const dueDayDefaults={
+ 'Gemeinschaftskonto':1,'LEAF':1,'E-Bike-Versicherung':5,'Handy':13,
+ 'Gravel-Versicherung':15,'Staatsanwaltschaft':16,'Amazon Prime':23,
+ 'iCloud':26,'BookBeat':29,'WOW':30
+};
 function defaultCalendar(key,s){
- const fixedAmt=n=>{const f=s.fixed.find(x=>x.name===n);return f?f.amount:0};
- const hand= fixedAmt('Handy');
- const shared=fixedAmt('Gemeinschaftskonto');
- const leaf=fixedAmt('LEAF');
- const stateAmt=fixedAmt('Staatsanwaltschaft');
- const prime=fixedAmt('Amazon Prime');
- const icloud=fixedAmt('iCloud');
- const book=fixedAmt('BookBeat');
- const wow=fixedAmt('WOW');
- const apple=fixedAmt('Apple Music');
- const crunchy=fixedAmt('Crunchyroll');
- return [
-   {name:'Gemeinschaftskonto',amount:shared,day:1,approx:true,fixedName:'Gemeinschaftskonto'},
-   {name:'LEAF',amount:leaf,day:1,approx:true,fixedName:'LEAF'},
-   {name:'E-Bike-Versicherung',amount:6.98,day:5,approx:true,fixedName:'E-Bike-Versicherung'},
-   {name:'Handy',amount:hand,day:13,approx:true,fixedName:'Handy'},
-   {name:'Gravel-Versicherung',amount:11.72,day:15,approx:true,fixedName:'Gravel-Versicherung'},
-   {name:'Staatsanwaltschaft',amount:stateAmt,day:16,approx:true,fixedName:'Staatsanwaltschaft'},
-   {name:'Amazon Prime',amount:prime,day:23,approx:true,fixedName:'Amazon Prime'},
-   {name:'iCloud',amount:icloud,day:26,approx:true,fixedName:'iCloud'},
-   {name:'BookBeat',amount:book,day:29,approx:true,fixedName:'BookBeat'},
-   {name:'WOW',amount:wow,day:30,approx:true,fixedName:'WOW'},
-   {name:'Apple Music',amount:apple,day:null,approx:true,fixedName:'Apple Music'},
-   {name:'Crunchyroll',amount:crunchy,day:null,approx:true,fixedName:'Crunchyroll'}
- ].filter(x=>x.amount>0);
+ return (s.fixed||[]).map(f=>({
+  name:f.name,amount:f.amount,
+  day:Object.prototype.hasOwnProperty.call(f,'day')?f.day:(dueDayDefaults[f.name]??null),
+  approx:true,fixedName:f.name
+ }));
+}
+function syncFixedCalendar(s){
+ if(!Array.isArray(s.fixed))s.fixed=[];
+ if(!Array.isArray(s.calendar))s.calendar=[];
+ const names=new Set(s.fixed.map(f=>f.name));
+ s.calendar=s.calendar.filter(c=>!c.fixedName||names.has(c.fixedName));
+ s.fixed.forEach(f=>{
+  const current=s.calendar.find(c=>c.fixedName===f.name);
+  if(!Object.prototype.hasOwnProperty.call(f,'day')){
+   f.day=current?(current.day??null):(dueDayDefaults[f.name]??null);
+  }
+  if(current){current.name=f.name;current.amount=Number(f.amount)||0;current.day=f.day;}
+  else s.calendar.push({name:f.name,amount:f.amount,day:f.day,approx:true,fixedName:f.name});
+ });
 }
 function inflate(t,key){
  const s={income:t.income,savingGoal:t.savingGoal,savedActual:t.savedActual||0,
@@ -780,12 +809,13 @@ Object.entries(db.months).forEach(([key,s])=>{
 if(!Array.isArray(db.savingsGoals)) db.savingsGoals=[];
 Object.values(db.months).forEach(s=>{
  if(typeof s.notes!=='string') s.notes='';
+ syncFixedCalendar(s);
 });
 save();
 
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
 function state(){return db.months[db.active]}
-function num(v){const n=Number(String(v).trim().replace(/\./g,'').replace(',','.'));return Number.isFinite(n)?n:NaN}
+function num(v){let raw=String(v).trim().replace(/\s/g,'');if(raw.includes(','))raw=raw.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(raw))raw=raw.replace(/\./g,'');const n=Number(raw);return raw!==''&&Number.isFinite(n)?n:NaN}
 function planned(b){return b.base+Math.max(0,state().income-BASE)*(b.extraShare||0)}
 function fixedTotal(){return state().fixed.reduce((s,x)=>s+x.amount,0)}
 function budgetTotal(){return state().budgets.reduce((s,x)=>s+planned(x),0)}
@@ -817,7 +847,31 @@ function applyFont(){
  $('font').value=selected;
 }
 function renderMonths(){
- $('month').innerHTML='';Object.keys(db.months).sort().forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);if(k===db.active)o.selected=true;$('month').appendChild(o)})
+ $('month').innerHTML='';
+ Object.keys(db.months).sort().forEach(k=>{
+  const o=document.createElement('option');o.value=k;o.textContent=monthLabel(k);
+  if(k===db.active)o.selected=true;
+  $('month').appendChild(o);
+ });
+ $('targetMonth').value=db.active;
+}
+function openOrCreateMonth(key){
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(key)){alert('Bitte einen gültigen Monat auswählen.');return;}
+ if(!db.months[key]){
+  const keys=Object.keys(db.months).sort(),sourceKey=keys.filter(k=>k<key).pop()||keys[0];
+  const prev=db.months[sourceKey];
+  const s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,
+    fixed:prev.fixed.map(f=>({...f,done:false})),
+    budgets:prev.budgets.map(b=>({...b,spent:0})),expenses:[],notes:''};
+  s.calendar=defaultCalendar(key,s);
+  syncFixedCalendar(s);
+  db.months[key]=s;
+ }
+ db.active=key;save();renderAll();
+}
+function nextMonthKey(key){
+ const [y,m]=key.split('-').map(Number),d=new Date(y,m,1);
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
 function renderTop(){
  syncSpent();$('income').value=String(state().income).replace('.',',');$('savedActual').value=String(state().savedActual||0).replace('.',',');
@@ -833,8 +887,56 @@ function renderSavings(){
  const max=Math.max(1,...months.map(k=>db.months[k].savedActual||0));$('savingsHistory').innerHTML='';
  months.forEach(k=>{const v=db.months[k].savedActual||0;const r=document.createElement('div');r.className='savingsBarRow';r.innerHTML='<span class="small"></span><div class="savingsTrack"><div class="savingsFill"></div></div><b class="small right"></b>';r.children[0].textContent=monthLabel(k);r.querySelector('.savingsFill').style.width=(v/max*100)+'%';r.querySelector('b').textContent=euro.format(v);$('savingsHistory').appendChild(r)})
 }
+let editingFixedName=null;
+function resetFixedEditor(){
+ editingFixedName=null;
+ $('fixedName').value='';$('fixedAmount').value='';$('fixedDay').value='';
+ $('fixedEditorTitle').textContent='➕ Fixkosten hinzufügen';
+ $('addFixed').textContent='＋ Fixkosten hinzufügen';
+ $('cancelFixedEdit').classList.add('hidden');
+}
+function affectedFixedMonths(){
+ return $('fixedFuture').checked?Object.keys(db.months).filter(k=>k>=db.active).sort():[db.active];
+}
 function renderFixed(){
- $('fixedList').innerHTML='';state().fixed.forEach((f,i)=>{const r=document.createElement('div');r.className='row';const l=document.createElement('div');l.className='left';l.innerHTML='<div class="name"></div><div class="sub"></div>';l.querySelector('.name').textContent=(defaultsEmoji[f.name]||'🧾')+' '+f.name;l.querySelector('.sub').textContent=euro.format(f.amount);const b=document.createElement('button');b.textContent=f.done?'Erledigt ✓':'Offen';if(f.done)b.classList.add('done');b.onclick=()=>{state().fixed[i].done=!state().fixed[i].done;save();renderAll()};r.append(l,b);$('fixedList').appendChild(r)})
+ $('fixedList').innerHTML='';
+ state().fixed.forEach((f,i)=>{
+  const r=document.createElement('div');r.className='row fixedRow';
+  const l=document.createElement('div');l.className='left';
+  l.innerHTML='<div class="name"></div><div class="sub"></div>';
+  l.querySelector('.name').textContent=(defaultsEmoji[f.name]||'🧾')+' '+f.name;
+  l.querySelector('.sub').textContent=euro.format(f.amount)+(f.day==null?'':' · Tag '+f.day);
+  const actions=document.createElement('div');actions.className='fixedActions';
+  const done=document.createElement('button');done.className='fixedDone';
+  done.textContent=f.done?'Erledigt ✓':'Offen';if(f.done)done.classList.add('done');
+  done.onclick=()=>{state().fixed[i].done=!state().fixed[i].done;save();renderAll()};
+  const edit=document.createElement('button');edit.className='deleteBtn';edit.textContent='✏️';edit.title='Fixkosten bearbeiten';
+  edit.onclick=()=>{
+   editingFixedName=f.name;
+   $('fixedName').value=f.name;
+   $('fixedAmount').value=String(f.amount).replace('.',',');
+   $('fixedDay').value=f.day==null?'':String(f.day);
+   $('fixedEditorTitle').textContent='✏️ Fixkosten bearbeiten';
+   $('addFixed').textContent='Änderungen speichern';
+   $('cancelFixedEdit').classList.remove('hidden');
+   $('fixedMsg').textContent='Bearbeitung: '+f.name;
+   $('fixedName').focus();
+  };
+  const del=document.createElement('button');del.className='deleteBtn';del.textContent='🗑️';del.title='Fixkosten löschen';
+  del.onclick=()=>{
+   const scope=$('fixedFuture').checked?'in diesem und allen bereits angelegten späteren Monaten':'nur in diesem Monat';
+   if(!confirm('„'+f.name+'“ wirklich '+scope+' löschen?'))return;
+   affectedFixedMonths().forEach(k=>{
+    const month=db.months[k];
+    month.fixed=month.fixed.filter(x=>x.name.toLocaleLowerCase('de-DE')!==f.name.toLocaleLowerCase('de-DE'));
+    syncFixedCalendar(month);
+   });
+   if(editingFixedName===f.name)resetFixedEditor();
+   save();renderAll();$('fixedMsg').textContent='Fixkosten gelöscht ✓';
+  };
+  actions.append(done,edit,del);r.append(l,actions);$('fixedList').appendChild(r);
+ });
+ if(!state().fixed.length)$('fixedList').innerHTML='<div class="msg">Noch keine Fixkosten. Füge unten deinen ersten Posten hinzu.</div>';
 }
 function renderBudgets(){
  syncSpent();$('budgets').innerHTML='';let spent=0,total=0;state().budgets.forEach(b=>{const t=planned(b),left=t-b.spent,pct=t?Math.min(100,Math.max(0,b.spent/t*100)):0;spent+=b.spent;total+=t;const d=document.createElement('div');d.className='budget';d.innerHTML='<div class="budgethead"><div><b></b><div class="sub"></div></div><div class="right"><b></b><div class="sub">übrig</div></div></div><div class="bar"><div></div></div>';d.querySelector('.budgethead>div:first-child b').textContent=em(b)+' '+b.name;d.querySelector('.budgethead>div:first-child .sub').textContent='Budget '+euro.format(t)+' · ausgegeben '+euro.format(b.spent);d.querySelector('.right b').textContent=euro.format(left);d.querySelector('.bar>div').style.width=pct+'%';$('budgets').appendChild(d)});$('budgetUsage').textContent=total?Math.round(spent/total*100)+' % genutzt':'0 % genutzt'
@@ -864,8 +966,8 @@ function renderCalendar(){
  $('calendarGrid').innerHTML='';['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(x=>{const h=document.createElement('div');h.className='calHead';h.textContent=x;$('calendarGrid').appendChild(h)});
  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='day empty';$('calendarGrid').appendChild(e)}
  const now=new Date();
- for(let d=1;d<=total;d++){const el=document.createElement('div');el.className='day';el.textContent=d;const has=items.some(x=>x.day===d);if(has){el.classList.add('hasPay');const dot=document.createElement('div');dot.className='dot';el.appendChild(dot)}if(now.getFullYear()===y&&now.getMonth()+1===m&&now.getDate()===d)el.classList.add('today');$('calendarGrid').appendChild(el)}
- $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(defaultsEmoji[x.fixedName]||'📤')+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(x.day).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=euro.format(x.amount);r.append(l,a);$('calendarList').appendChild(r)});
+ for(let d=1;d<=total;d++){const el=document.createElement('div');el.className='day';el.textContent=d;const has=items.some(x=>x.day!=null&&Math.min(x.day,total)===d);if(has){el.classList.add('hasPay');const dot=document.createElement('div');dot.className='dot';el.appendChild(dot)}if(now.getFullYear()===y&&now.getMonth()+1===m&&now.getDate()===d)el.classList.add('today');$('calendarGrid').appendChild(el)}
+ $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(defaultsEmoji[x.fixedName]||'📤')+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(Math.min(x.day,total)).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=euro.format(x.amount);r.append(l,a);$('calendarList').appendChild(r)});
  $('calendarSum').textContent=euro.format(items.reduce((s,x)=>s+x.amount,0))
 }
 
@@ -1011,7 +1113,9 @@ $('toggleArrange').onclick=()=>{
 };
 $('theme').onchange=e=>{db.settings.theme=e.target.value;save();applyTheme()};
 $('font').onchange=e=>{db.settings.font=e.target.value;save();applyFont()};
-$('month').onchange=e=>{db.active=e.target.value;save();renderAll()};
+$('month').onchange=e=>{db.active=e.target.value;resetFixedEditor();save();renderAll()};
+$('nextMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
+$('openMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth($('targetMonth').value)};
 $('income').onchange=e=>{const n=num(e.target.value);if(n>=0){state().income=n;save();renderAll()}};
 $('savedActual').onchange=e=>{const n=num(e.target.value);if(n>=0){state().savedActual=n;save();renderAll()}};
 $('monthNotes').oninput=e=>{
@@ -1030,14 +1134,39 @@ $('addGoal').onclick=()=>{
  $('goalMsg').textContent='Sparziel hinzugefügt ✓';
  save();renderAll();
 };
+$('cancelFixedEdit').onclick=()=>{resetFixedEditor();$('fixedMsg').textContent='Bearbeitung abgebrochen.'};
+$('addFixed').onclick=()=>{
+ const name=$('fixedName').value.trim(),amount=num($('fixedAmount').value),rawDay=$('fixedDay').value.trim();
+ const day=rawDay===''?null:Number(rawDay);
+ if(!name){$('fixedMsg').textContent='Bitte eine Bezeichnung eingeben.';return;}
+ if(!Number.isFinite(amount)||amount<0){$('fixedMsg').textContent='Bitte einen gültigen Betrag eingeben.';return;}
+ if(day!==null&&(!Number.isInteger(day)||day<1||day>31)){$('fixedMsg').textContent='Der Abbuchungstag muss zwischen 1 und 31 liegen.';return;}
+ const oldName=editingFixedName,lower=s=>s.toLocaleLowerCase('de-DE'),months=affectedFixedMonths();
+ if(oldName){
+  if(!state().fixed.some(f=>lower(f.name)===lower(oldName))){$('fixedMsg').textContent='Dieser Posten existiert nicht mehr.';resetFixedEditor();return;}
+  if(months.some(k=>db.months[k].fixed.some(f=>lower(f.name)===lower(name)&&lower(f.name)!==lower(oldName)))){$('fixedMsg').textContent='Ein anderer Fixkosten-Posten hat diesen Namen bereits.';return;}
+ }else if(state().fixed.some(f=>lower(f.name)===lower(name))){$('fixedMsg').textContent='Diese Fixkosten gibt es in diesem Monat schon.';return;}
+ months.forEach(k=>{
+  const month=db.months[k],idx=month.fixed.findIndex(f=>lower(f.name)===lower(oldName||name)),entry={name,amount,day};
+  if(idx>=0)month.fixed[idx]={...month.fixed[idx],...entry};
+  else {
+   const otherIdx=month.fixed.findIndex(f=>lower(f.name)===lower(name));
+   if(otherIdx>=0)month.fixed[otherIdx]={...month.fixed[otherIdx],...entry};
+   else month.fixed.push({...entry,done:false});
+  }
+  syncFixedCalendar(month);
+ });
+ const message=oldName?'Fixkosten aktualisiert ✓':'Fixkosten hinzugefügt ✓';
+ resetFixedEditor();save();renderAll();$('fixedMsg').textContent=message;
+};
 $('addExpense').onclick=()=>{const n=num($('amount').value);if(!(n>0)){$('msg').textContent='Bitte einen gültigen Betrag eingeben.';return}state().expenses.push({category:$('category').value,amount:n,note:$('note').value.trim()});$('amount').value='';$('note').value='';$('msg').textContent='Gespeichert ✓';save();renderAll()};
 $('addCategory').onclick=()=>{const name=$('catName').value.trim(),budget=num($('catBudget').value),ico=$('catEmoji').value.trim()||'✨';if(!name){$('categoryMsg').textContent='Bitte gib der Kategorie einen Namen.';return}if(!(budget>=0)){$('categoryMsg').textContent='Bitte gib ein gültiges Budget ein.';return}if(state().budgets.some(b=>b.name.toLowerCase()===name.toLowerCase())){$('categoryMsg').textContent='Diese Kategorie gibt es schon.';return}state().budgets.push({name,base:budget,extraShare:0,spent:0,custom:true,emoji:ico});$('catName').value='';$('catBudget').value='';$('catEmoji').value='';$('categoryMsg').textContent='Kategorie hinzugefügt ✓';save();renderAll()};
 $('cleanMonth').onclick=()=>{if(!confirm('Wirklich komplett neu starten?\\n\\nAlle erfassten Ausgaben dieses Monats werden gelöscht und alle Fixkosten wieder auf „Offen“ gesetzt. Deine Budgets und Kategorien bleiben erhalten.'))return;state().expenses=[];state().fixed.forEach(f=>f.done=false);state().savedActual=0;save();renderAll();alert('Der Monat ist jetzt sauber auf Start gesetzt ✓')};
 $('exportBackup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Sabrina-Budget-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('importBackup').onclick=()=>$('backupFile').click();
 $('backupFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;if(!db.settings)db.settings={theme:'sage',font:'modern'};
-if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'})});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
-$('newMonth').onclick=()=>{const ks=Object.keys(db.months).sort(),last=ks[ks.length-1],[y,m]=last.split('-').map(Number),d=new Date(y,m,1),key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(db.months[key]){db.active=key;save();renderAll();return}const prev=db.months[last],s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,fixed:prev.fixed.map(x=>({...x,done:false})),budgets:prev.budgets.map(x=>({...x,spent:0})),expenses:[]};s.calendar=defaultCalendar(key,s);db.months[key]=s;db.active=key;save();renderAll()};
+if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'});syncFixedCalendar(s)});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
+$('newMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
 initBlockReorder();
 renderAll();
 })();

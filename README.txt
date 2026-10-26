@@ -1,34 +1,20 @@
-Sabrinas Budget PWA – Version 16
+Sabrinas Budget PWA – Version 17
 
 NEU:
-Zusätzliche Designs:
-- 📚 Bookish Dark Academia
-- 🩷 Barbie Pop
-- 🍵 Matcha Café
-- 🌌 Night Sky
-- 🎃 Halloween Cozy
-
-Alle bisherigen Designs bleiben natürlich ebenfalls erhalten.
+- Monate und Jahre frei wählen: gewünschten Monat anlegen oder vorhandenen öffnen
+- Über „+ Folgemonat“ bequem zum nächsten Monat wechseln
+- Fixkosten hinzufügen, bearbeiten und löschen
+- Betrag und optionalen Abbuchungstag pro Fixkosten-Posten festlegen
+- Änderungen wahlweise nur im aktuellen oder auch in bereits vorhandenen Folgemonaten durchführen
+- Zahlungskalender aktualisiert sich bei Fixkostenänderungen automatisch
+- Neue Monate übernehmen den jüngsten vorherigen Stand (aber keine bezahlten Markierungen/Ausgaben)
+- Sichere Übernahme vorhandener lokaler Budgetdaten und Backups
 
 WEITERHIN ENTHALTEN:
-- Design + Schriftarten ganz unten
-- Blöcke sortieren
-- Monatszusammenfassung
-- Monatsnotizen
-- Sparziele
-- Ausgaben bearbeiten/löschen
-- eigene Kategorien
-- Zahlungskalender
-- Sparverlauf
-- Checkerboard-App-Icon
-
-Bestehende Budgetdaten bleiben erhalten.
-
-GITHUB-UPDATE:
-Im selben Repository hochladen/ersetzen:
-- index.html
-- sw.js
-- manifest.webmanifest
-- icon-192.png
-- icon-512.png
-- apple-touch-icon.png
+- Alle bisherigen 27 Designs + Schriftauswahl
+- Individuelle Block-Reihenfolge
+- Monatszusammenfassung, Monatsnotizen, Sparziele
+- Flexible Ausgaben und Kategorien
+- Zahlungskalender und Sparverlauf
+- Checkerboard App-Icon
+- Backup/Import
