@@ -1113,7 +1113,9 @@ $('toggleArrange').onclick=()=>{
 };
 $('theme').onchange=e=>{db.settings.theme=e.target.value;save();applyTheme()};
 $('font').onchange=e=>{db.settings.font=e.target.value;save();applyFont()};
-$('month').onchange=e=>{db.active=e.target.value;save();renderAll()};
+$('month').onchange=e=>{db.active=e.target.value;resetFixedEditor();save();renderAll()};
+$('nextMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
+$('openMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth($('targetMonth').value)};
 $('income').onchange=e=>{const n=num(e.target.value);if(n>=0){state().income=n;save();renderAll()}};
 $('savedActual').onchange=e=>{const n=num(e.target.value);if(n>=0){state().savedActual=n;save();renderAll()}};
 $('monthNotes').oninput=e=>{
@@ -1132,6 +1134,31 @@ $('addGoal').onclick=()=>{
  $('goalMsg').textContent='Sparziel hinzugefügt ✓';
  save();renderAll();
 };
+$('cancelFixedEdit').onclick=()=>{resetFixedEditor();$('fixedMsg').textContent='Bearbeitung abgebrochen.'};
+$('addFixed').onclick=()=>{
+ const name=$('fixedName').value.trim(),amount=num($('fixedAmount').value),rawDay=$('fixedDay').value.trim();
+ const day=rawDay===''?null:Number(rawDay);
+ if(!name){$('fixedMsg').textContent='Bitte eine Bezeichnung eingeben.';return;}
+ if(!Number.isFinite(amount)||amount<0){$('fixedMsg').textContent='Bitte einen gültigen Betrag eingeben.';return;}
+ if(day!==null&&(!Number.isInteger(day)||day<1||day>31)){$('fixedMsg').textContent='Der Abbuchungstag muss zwischen 1 und 31 liegen.';return;}
+ const oldName=editingFixedName,lower=s=>s.toLocaleLowerCase('de-DE'),months=affectedFixedMonths();
+ if(oldName){
+  if(!state().fixed.some(f=>lower(f.name)===lower(oldName))){$('fixedMsg').textContent='Dieser Posten existiert nicht mehr.';resetFixedEditor();return;}
+  if(months.some(k=>db.months[k].fixed.some(f=>lower(f.name)===lower(name)&&lower(f.name)!==lower(oldName)))){$('fixedMsg').textContent='Ein anderer Fixkosten-Posten hat diesen Namen bereits.';return;}
+ }else if(state().fixed.some(f=>lower(f.name)===lower(name))){$('fixedMsg').textContent='Diese Fixkosten gibt es in diesem Monat schon.';return;}
+ months.forEach(k=>{
+  const month=db.months[k],idx=month.fixed.findIndex(f=>lower(f.name)===lower(oldName||name)),entry={name,amount,day};
+  if(idx>=0)month.fixed[idx]={...month.fixed[idx],...entry};
+  else {
+   const otherIdx=month.fixed.findIndex(f=>lower(f.name)===lower(name));
+   if(otherIdx>=0)month.fixed[otherIdx]={...month.fixed[otherIdx],...entry};
+   else month.fixed.push({...entry,done:false});
+  }
+  syncFixedCalendar(month);
+ });
+ const message=oldName?'Fixkosten aktualisiert ✓':'Fixkosten hinzugefügt ✓';
+ resetFixedEditor();save();renderAll();$('fixedMsg').textContent=message;
+};
 $('addExpense').onclick=()=>{const n=num($('amount').value);if(!(n>0)){$('msg').textContent='Bitte einen gültigen Betrag eingeben.';return}state().expenses.push({category:$('category').value,amount:n,note:$('note').value.trim()});$('amount').value='';$('note').value='';$('msg').textContent='Gespeichert ✓';save();renderAll()};
 $('addCategory').onclick=()=>{const name=$('catName').value.trim(),budget=num($('catBudget').value),ico=$('catEmoji').value.trim()||'✨';if(!name){$('categoryMsg').textContent='Bitte gib der Kategorie einen Namen.';return}if(!(budget>=0)){$('categoryMsg').textContent='Bitte gib ein gültiges Budget ein.';return}if(state().budgets.some(b=>b.name.toLowerCase()===name.toLowerCase())){$('categoryMsg').textContent='Diese Kategorie gibt es schon.';return}state().budgets.push({name,base:budget,extraShare:0,spent:0,custom:true,emoji:ico});$('catName').value='';$('catBudget').value='';$('catEmoji').value='';$('categoryMsg').textContent='Kategorie hinzugefügt ✓';save();renderAll()};
 $('cleanMonth').onclick=()=>{if(!confirm('Wirklich komplett neu starten?\\n\\nAlle erfassten Ausgaben dieses Monats werden gelöscht und alle Fixkosten wieder auf „Offen“ gesetzt. Deine Budgets und Kategorien bleiben erhalten.'))return;state().expenses=[];state().fixed.forEach(f=>f.done=false);state().savedActual=0;save();renderAll();alert('Der Monat ist jetzt sauber auf Start gesetzt ✓')};
@@ -1139,7 +1166,7 @@ $('exportBackup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{
 $('importBackup').onclick=()=>$('backupFile').click();
 $('backupFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;if(!db.settings)db.settings={theme:'sage',font:'modern'};
 if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'})});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
-$('newMonth').onclick=()=>{const ks=Object.keys(db.months).sort(),last=ks[ks.length-1],[y,m]=last.split('-').map(Number),d=new Date(y,m,1),key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(db.months[key]){db.active=key;save();renderAll();return}const prev=db.months[last],s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,fixed:prev.fixed.map(x=>({...x,done:false})),budgets:prev.budgets.map(x=>({...x,spent:0})),expenses:[]};s.calendar=defaultCalendar(key,s);db.months[key]=s;db.active=key;save();renderAll()};
+$('newMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
 initBlockReorder();
 renderAll();
 })();
