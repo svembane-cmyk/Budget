@@ -503,13 +503,6 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div id="topCategory" class="msg"></div>
     </div>
 
-    <div class="card" data-block-id="notes">
-      <b>📝 Monatsnotizen</b>
-      <div class="muted">Alles, was du für diesen Monat festhalten möchtest.</div>
-      <textarea id="monthNotes" placeholder="z. B. Diesen Monat weniger bestellen, Urlaubsgeld zurücklegen …"></textarea>
-      <div id="notesStatus" class="msg"></div>
-    </div>
-
     <div class="card" data-block-id="goals">
       <div class="sectionTitle">
         <div><b>🎯 Meine Sparziele</b><div class="muted">Langfristige Ziele über mehrere Monate</div></div>
@@ -1005,9 +998,6 @@ function renderSummary(){
  const top=Object.entries(spendBy).sort((a,b)=>b[1]-a[1])[0];
  $('topCategory').textContent=top ? 'Größte Ausgabenkategorie: '+top[0]+' · '+euro.format(top[1]) : 'Noch keine Ausgaben erfasst.';
 }
-function renderNotes(){
- $('monthNotes').value=state().notes||'';
-}
 function renderGoals(){
  const list=$('goalsList');list.innerHTML='';
  const goals=db.savingsGoals||[];
@@ -1121,7 +1111,7 @@ function renderIncome(){
  const received=s.incomeEntries.filter(e=>e.received).reduce((a,e)=>a+e.amount,0);$('incomeBank').textContent=euro.format(s.incomeEntries.filter(e=>e.received&&e.source!=='cash').reduce((a,e)=>a+e.amount,0));$('incomeCash').textContent=euro.format(s.incomeEntries.filter(e=>e.received&&e.source==='cash').reduce((a,e)=>a+e.amount,0));$('incomeInfo').textContent='Geplant: '+euro.format(s.income)+' · davon erhalten: '+euro.format(received)+'. Die Monatsplanung berücksichtigt geplante Einnahmen. Die Beträge oben sind Einnahmen, keine Kontostände.';
 }
 $('addIncome').onclick=()=>{const name=$('incomeName').value.trim(),amount=num($('incomeAmount').value),day=Number($('incomeDay').value);if(!name||!Number.isFinite(amount)||amount<=0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){$('incomeMessage').textContent='Bitte Name, positiven Betrag und gültigen Tag eingeben.';return}state().incomeEntries.push({name,amount,day,source:$('incomeSource').value,received:true});state().income=entriesTotal(state());$('incomeName').value='';$('incomeAmount').value='';$('incomeDay').value='';$('incomeMessage').textContent='Geldeingang hinzugefügt ✓';save();renderAll()};
-function renderAll(){renderIncome();applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
+function renderAll(){renderIncome();applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
 let arrangeMode=false;
@@ -1138,13 +1128,6 @@ $('nextMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db
 $('openMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth($('targetMonth').value)};
 $('income').onchange=e=>{const n=num(e.target.value);if(n>=0){state().income=n;save();renderAll()}};
 $('savedActual').onchange=e=>{const n=num(e.target.value);if(n>=0){state().savedActual=n;save();renderAll()}};
-$('monthNotes').oninput=e=>{
- state().notes=e.target.value;
- save();
- $('notesStatus').textContent='Automatisch gespeichert ✓';
- clearTimeout(window.__notesTimer);
- window.__notesTimer=setTimeout(()=>{$('notesStatus').textContent=''},1400);
-};
 $('addGoal').onclick=()=>{
  const name=$('goalName').value.trim(),target=num($('goalTarget').value),saved=num($('goalSaved').value||'0');
  if(!name){$('goalMsg').textContent='Bitte gib dem Sparziel einen Namen.';return;}
