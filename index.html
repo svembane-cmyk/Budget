@@ -364,7 +364,7 @@ h1{font-size:25px;line-height:1.15;margin:0 0 4px}.muted{color:var(--muted);font
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--soft);border-radius:17px;padding:12px;min-width:0}.stat b{display:block;font-size:20px;margin-top:3px;overflow-wrap:anywhere}
 label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
-.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;z-index:20;background:var(--card);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(0,0,0,.08)} .app{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;z-index:20;background:var(--card);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(0,0,0,.08)} .app{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
 .tabs button{padding:10px 5px;font-size:12px}.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .hidden{display:none!important}
 .sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -474,13 +474,14 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </div>
 
-  <div class="tabs">
+  <nav class="tabs" aria-label="Hauptmenü">
     <button data-tab="overview" class="active">Übersicht</button>
     <button data-tab="incomes">Einnahmen</button>
     <button data-tab="fixed">Fixkosten</button>
     <button data-tab="calendar">Kalender</button>
     <button data-tab="expenses">Ausgaben</button>
-  </div>
+    <button data-tab="settings">⚙️<br>Einstellungen</button>
+  </nav>
   <div class="arrangeBar">
     <button id="toggleArrange" type="button">↕ Blöcke sortieren</button>
     <span id="arrangeHint" class="arrangeHint">Reihenfolge bleibt gespeichert.</span>
@@ -544,7 +545,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
   <section id="incomes" class="panel hidden"><div class="card" data-block-id="income-entries">
     <b>💵 Geldeingänge</b><div class="muted">Plane deine Zahlungen und markiere sie, sobald sie angekommen sind. Zuschläge kannst du ergänzen.</div>
     <div id="incomeList"></div><div class="grid2"><div class="stat"><span class="muted">Konto · Einnahmen</span><b id="incomeBank"></b></div><div class="stat"><span class="muted">Bargeld · Einnahmen</span><b id="incomeCash"></b></div></div>
-    <div class="grid2"><div><label for="incomeName">Bezeichnung</label><input id="incomeName" placeholder="z. B. Zuschläge"></div><div><label for="incomeAmount">Betrag</label><input id="incomeAmount" inputmode="decimal" placeholder="0,00"></div></div>
+    <div class="grid2"><div><label for="incomeName">Bezeichnung</label><input id="incomeName" placeholder="z. B. Trinkgeld oder Plasmaspende"></div><div><label for="incomeAmount">Betrag</label><input id="incomeAmount" inputmode="decimal" placeholder="0,00"></div></div>
     <label for="incomeSource">Wo hast du das Geld erhalten?</label><select id="incomeSource"><option value="bank">Konto</option><option value="cash">Bargeld</option></select><label for="incomeDay">Tag im Monat</label><input id="incomeDay" type="number" min="1" max="31" placeholder="z. B. 15">
     <button id="addIncome" class="primary" type="button" style="margin-top:10px">＋ Geldeingang hinzufügen</button>
     <div id="incomeMessage" class="msg"></div><div id="incomeInfo" class="msg"></div>
@@ -614,6 +615,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </section>
 
+  <section id="settings" class="panel hidden">
   <div class="card">
     <b>🔄 Neustart & Backup</b>
     <div class="muted">Für einen wirklich sauberen Monatsstart kannst du alle Ausgaben auf 0 setzen.</div>
@@ -675,6 +677,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </details>
 
+  </section>
   <div class="footer">Deine Daten werden lokal auf deinem iPhone gespeichert. E-Bike und Gravel sind getrennt versichert, und du kannst zwischen mehreren Farbdesigns wechseln.</div>
 </div>
 
@@ -1110,7 +1113,7 @@ function renderIncome(){
  s.incomeEntries.forEach((entry,i)=>{const row=document.createElement('div');row.className='row';const label=document.createElement('div');label.className='left';const name=document.createElement('div');name.className='name';name.textContent=entry.name;const sub=document.createElement('div');sub.className='sub';sub.textContent=(entry.day?entry.day+'. des Monats · ':'')+euro.format(entry.amount)+' · '+(entry.source==='cash'?'Bargeld':'Konto')+(entry.received?' · erhalten':' · geplant');label.append(name,sub);const actions=document.createElement('div');actions.className='fixedActions';const toggle=document.createElement('button');toggle.textContent=entry.received?'✓ Erhalten':'Offen';toggle.onclick=()=>{entry.received=!entry.received;save();renderAll()};const edit=document.createElement('button');edit.textContent='✏️';edit.setAttribute('aria-label','Geldeingang bearbeiten');edit.onclick=()=>{const n=prompt('Bezeichnung',entry.name);if(n===null)return;const v=prompt('Betrag',String(entry.amount).replace('.',','));if(v===null)return;const d=prompt('Tag im Monat (1–31)',entry.day||'');if(d===null)return;const amount=num(v),day=Number(d);if(!n.trim()||!Number.isFinite(amount)||amount<0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){alert('Bitte Name, Betrag und einen gültigen Tag für diesen Monat eingeben.');return}const source=prompt('Konto oder Bargeld?',entry.source==='cash'?'Bargeld':'Konto');if(source===null)return;if(!['konto','bargeld'].includes(source.trim().toLowerCase())){alert('Bitte Konto oder Bargeld eingeben.');return}Object.assign(entry,{name:n.trim(),amount,day,source:source.trim().toLowerCase()==='bargeld'?'cash':'bank'});s.income=entriesTotal(s);save();renderAll()};const del=document.createElement('button');del.textContent='🗑️';del.setAttribute('aria-label','Geldeingang löschen');del.onclick=()=>{if(!confirm('Geldeingang löschen?'))return;s.incomeEntries.splice(i,1);s.income=entriesTotal(s);save();renderAll()};actions.append(toggle,edit,del);row.append(label,actions);list.append(row)});
  const received=s.incomeEntries.filter(e=>e.received).reduce((a,e)=>a+e.amount,0);$('incomeBank').textContent=euro.format(s.incomeEntries.filter(e=>e.received&&e.source!=='cash').reduce((a,e)=>a+e.amount,0));$('incomeCash').textContent=euro.format(s.incomeEntries.filter(e=>e.received&&e.source==='cash').reduce((a,e)=>a+e.amount,0));$('incomeInfo').textContent='Geplant: '+euro.format(s.income)+' · davon erhalten: '+euro.format(received)+'. Die Monatsplanung berücksichtigt geplante Einnahmen. Die Beträge oben sind Einnahmen, keine Kontostände.';
 }
-$('addIncome').onclick=()=>{const name=$('incomeName').value.trim(),amount=num($('incomeAmount').value),day=Number($('incomeDay').value);if(!name||!Number.isFinite(amount)||amount<=0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){$('incomeMessage').textContent='Bitte Name, positiven Betrag und gültigen Tag eingeben.';return}state().incomeEntries.push({name,amount,day,source:$('incomeSource').value,received:true});state().income=entriesTotal(state());$('incomeName').value='';$('incomeAmount').value='';$('incomeDay').value='';$('incomeMessage').textContent='Geldeingang hinzugefügt ✓';save();renderAll()};
+$('addIncome').onclick=()=>{const name=$('incomeName').value.trim(),amount=num($('incomeAmount').value),day=Number($('incomeDay').value);if(!name||!Number.isFinite(amount)||amount<=0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){$('incomeMessage').textContent='Bitte Name, positiven Betrag und gültigen Tag eingeben.';return}state().incomeEntries.push({name,amount,day,source:$('incomeSource').value,received:true});state().income=entriesTotal(state());$('incomeName').value='';$('incomeAmount').value='';$('incomeDay').value='';$('incomeMessage').textContent='Einnahme gespeichert ✓';save();renderAll()};
 function renderAll(){renderIncome();applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
