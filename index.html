@@ -364,7 +364,7 @@ h1{font-size:25px;line-height:1.15;margin:0 0 4px}.muted{color:var(--muted);font
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--soft);border-radius:17px;padding:12px;min-width:0}.stat b{display:block;font-size:20px;margin-top:3px;overflow-wrap:anywhere}
 label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);padding:8px 0}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg);border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(45,40,32,.08);padding:8px 10px calc(8px + env(safe-area-inset-bottom));} body{padding-bottom:calc(75px + env(safe-area-inset-bottom));}
 .tabs button{padding:10px 5px;font-size:12px}.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .hidden{display:none!important}
 .sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -474,12 +474,12 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </div>
 
-  <div class="tabs">
+  <nav class="tabs" aria-label="Hauptmenü">
     <button data-tab="overview" class="active">Übersicht</button>
     <button data-tab="fixed">Fixkosten</button>
     <button data-tab="calendar">Kalender</button>
     <button data-tab="expenses">Ausgaben</button>
-  </div>
+  </nav>
   <div class="arrangeBar">
     <button id="toggleArrange" type="button">↕ Blöcke sortieren</button>
     <span id="arrangeHint" class="arrangeHint">Reihenfolge bleibt gespeichert.</span>
@@ -525,20 +525,6 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
         <button id="addGoal" style="width:100%;margin-top:9px">Sparziel hinzufügen</button>
         <div id="goalMsg" class="msg"></div>
       </div>
-    </div>
-
-    <div class="card" data-block-id="savings">
-      <div class="sectionTitle">
-        <div><b>🎯 Sparen</b><div class="muted">Plan und tatsächlich gespart</div></div>
-        <span id="savedTotal" class="pill"></span>
-      </div>
-      <label>Tatsächlich in diesem Monat gespart</label>
-      <input id="savedActual" inputmode="decimal" placeholder="0,00">
-      <div class="bar"><div id="savingBar"></div></div>
-      <div id="savingText" class="msg"></div>
-      <div style="height:1px;background:var(--line);margin:14px 0"></div>
-      <b class="small">Sparverlauf über die Monate</b>
-      <div id="savingsHistory"></div>
     </div>
 
     <div class="card" data-block-id="budget-pots">
@@ -874,19 +860,13 @@ function nextMonthKey(key){
  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
 function renderTop(){
- syncSpent();$('income').value=String(state().income).replace('.',',');$('savedActual').value=String(state().savedActual||0).replace('.',',');
+ syncSpent();$('income').value=String(state().income).replace('.',',');
  const open=state().fixed.filter(x=>!x.done);$('openFixed').textContent=euro.format(open.reduce((s,x)=>s+x.amount,0));$('openCount').textContent=open.length+' offen';$('free').textContent=euro.format(state().income-fixedTotal()-budgetTotal());
- const saver=state().budgets.find(x=>x.name==='Sparen'),target=saver?planned(saver):0,actual=state().savedActual||0;
- $('savingBar').style.width=(target?Math.min(100,actual/target*100):0)+'%';$('savingText').textContent=euro.format(actual)+' tatsächlich gespart · '+euro.format(target)+' geplant';
  const flex=state().budgets.filter(b=>b.name!=='Sparen').reduce((sum,b)=>sum+Math.max(0,planned(b)-b.spent),0),totalDays=daysInMonth(db.active),day=activeDay(),left=Math.max(1,totalDays-day+1);
  $('todayAvailable').textContent=euro.format(flex/left);$('todayText').textContent='pro Tag bis Monatsende · '+euro.format(flex)+' flexibel übrig';
  const p=Math.min(100,Math.max(0,day/totalDays*100));$('monthBar').style.width=p+'%';$('monthProgressText').textContent='Monat '+Math.round(p)+' %';$('daysLeftText').textContent=left+' Tage übrig'
 }
-function renderSavings(){
- const months=Object.keys(db.months).sort();const total=months.reduce((s,k)=>s+(db.months[k].savedActual||0),0);$('savedTotal').textContent='Gesamt '+euro.format(total);
- const max=Math.max(1,...months.map(k=>db.months[k].savedActual||0));$('savingsHistory').innerHTML='';
- months.forEach(k=>{const v=db.months[k].savedActual||0;const r=document.createElement('div');r.className='savingsBarRow';r.innerHTML='<span class="small"></span><div class="savingsTrack"><div class="savingsFill"></div></div><b class="small right"></b>';r.children[0].textContent=monthLabel(k);r.querySelector('.savingsFill').style.width=(v/max*100)+'%';r.querySelector('b').textContent=euro.format(v);$('savingsHistory').appendChild(r)})
-}
+
 let editingFixedName=null;
 function resetFixedEditor(){
  editingFixedName=null;
@@ -1101,7 +1081,7 @@ function initBlockReorder(){
  applyBlockOrder();
 }
 
-function renderAll(){applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
+function renderAll(){applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
 let arrangeMode=false;
@@ -1117,7 +1097,6 @@ $('month').onchange=e=>{db.active=e.target.value;resetFixedEditor();save();rende
 $('nextMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
 $('openMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth($('targetMonth').value)};
 $('income').onchange=e=>{const n=num(e.target.value);if(n>=0){state().income=n;save();renderAll()}};
-$('savedActual').onchange=e=>{const n=num(e.target.value);if(n>=0){state().savedActual=n;save();renderAll()}};
 $('monthNotes').oninput=e=>{
  state().notes=e.target.value;
  save();
