@@ -364,7 +364,7 @@ h1{font-size:25px;line-height:1.15;margin:0 0 4px}.muted{color:var(--muted);font
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--soft);border-radius:17px;padding:12px;min-width:0}.stat b{display:block;font-size:20px;margin-top:3px;overflow-wrap:anywhere}
 label{font-size:12px;font-weight:700;display:block;margin:7px 0 5px}
-.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg);border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(45,40,32,.08);padding:8px 10px calc(8px + env(safe-area-inset-bottom));} body{padding-bottom:calc(75px + env(safe-area-inset-bottom));}
+.tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;z-index:20;background:var(--card);border-top:1px solid var(--line);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(0,0,0,.08)} .app{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
 .tabs button{padding:10px 5px;font-size:12px}.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .hidden{display:none!important}
 .sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -450,7 +450,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
 
   <div class="sortableZone" data-zone="top">
     <div class="card hero" data-block-id="today">
-      <div class="muted">Heute noch verfügbar</div>
+      <div class="muted">Geplantes Tagesbudget</div>
       <div id="todayAvailable" class="big">0,00 €</div>
       <div id="todayText" class="muted"></div>
       <div class="bar" style="background:rgba(255,255,255,.25)"><div id="monthBar" style="background:white"></div></div>
@@ -460,7 +460,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     <div class="card" data-block-id="month-status">
       <div style="display:flex;gap:10px;align-items:end">
         <div style="flex:1"><label>📅 Monat</label><select id="month"></select></div>
-        <div style="flex:1"><label>💵 Einkommen</label><input id="income" inputmode="decimal"></div>
+        <div style="flex:1"><label>💵 Geplantes Einkommen</label><input id="income" inputmode="decimal" readonly></div>
       </div>
       <div class="monthControls">
         <button id="nextMonth" type="button">＋ Folgemonat</button>
@@ -469,16 +469,18 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       </div>
       <div class="grid2" style="margin-top:12px">
         <div class="stat"><span class="muted">🏦 Fixkosten offen</span><b id="openFixed">0 €</b><span id="openCount" class="small muted"></span></div>
-        <div class="stat"><span class="muted">✨ Frei nach Planung</span><b id="free">0 €</b><span class="small muted">nach allen Töpfen</span></div>
+        <div class="stat"><span class="muted">✨ Noch nicht verteilt (Planung)</span><b id="free">0 €</b><span class="small muted">nach allen Töpfen</span></div>
       </div>
     </div>
   </div>
 
   <nav class="tabs" aria-label="Hauptmenü">
     <button data-tab="overview" class="active">Übersicht</button>
+    <button data-tab="incomes">Einnahmen</button>
     <button data-tab="fixed">Fixkosten</button>
     <button data-tab="calendar">Kalender</button>
     <button data-tab="expenses">Ausgaben</button>
+    <button data-tab="settings">⚙️<br>Einstellungen</button>
   </nav>
   <div class="arrangeBar">
     <button id="toggleArrange" type="button">↕ Blöcke sortieren</button>
@@ -502,13 +504,6 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div id="topCategory" class="msg"></div>
     </div>
 
-    <div class="card" data-block-id="notes">
-      <b>📝 Monatsnotizen</b>
-      <div class="muted">Alles, was du für diesen Monat festhalten möchtest.</div>
-      <textarea id="monthNotes" placeholder="z. B. Diesen Monat weniger bestellen, Urlaubsgeld zurücklegen …"></textarea>
-      <div id="notesStatus" class="msg"></div>
-    </div>
-
     <div class="card" data-block-id="goals">
       <div class="sectionTitle">
         <div><b>🎯 Meine Sparziele</b><div class="muted">Langfristige Ziele über mehrere Monate</div></div>
@@ -527,11 +522,34 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       </div>
     </div>
 
+    <div class="card hidden" data-block-id="savings">
+      <div class="sectionTitle">
+        <div><b>🎯 Sparen</b><div class="muted">Plan und tatsächlich gespart</div></div>
+        <span id="savedTotal" class="pill"></span>
+      </div>
+      <label>Tatsächlich in diesem Monat gespart</label>
+      <input id="savedActual" inputmode="decimal" placeholder="0,00">
+      <div class="bar"><div id="savingBar"></div></div>
+      <div id="savingText" class="msg"></div>
+      <div style="height:1px;background:var(--line);margin:14px 0"></div>
+      <b class="small">Sparverlauf über die Monate</b>
+      <div id="savingsHistory"></div>
+    </div>
+
     <div class="card" data-block-id="budget-pots">
       <div class="sectionTitle"><b>🧺 Budget-Töpfe</b><span id="budgetUsage" class="pill"></span></div>
       <div id="budgets"></div>
     </div>
   </section>
+
+  <section id="incomes" class="panel hidden"><div class="card" data-block-id="income-entries">
+    <b>💵 Geldeingänge</b><div class="muted">Plane deine Zahlungen und markiere sie, sobald sie angekommen sind. Zuschläge kannst du ergänzen.</div>
+    <div id="incomeList"></div><div class="grid2"><div class="stat"><span class="muted">Konto · Einnahmen</span><b id="incomeBank"></b></div><div class="stat"><span class="muted">Bargeld · Einnahmen</span><b id="incomeCash"></b></div></div>
+    <div class="grid2"><div><label for="incomeName">Bezeichnung</label><input id="incomeName" placeholder="z. B. Trinkgeld oder Plasmaspende"></div><div><label for="incomeAmount">Betrag</label><input id="incomeAmount" inputmode="decimal" placeholder="0,00"></div></div>
+    <label for="incomeSource">Wo hast du das Geld erhalten?</label><select id="incomeSource"><option value="bank">Konto</option><option value="cash">Bargeld</option></select><label for="incomeDay">Tag im Monat</label><input id="incomeDay" type="number" min="1" max="31" placeholder="z. B. 15">
+    <button id="addIncome" class="primary" type="button" style="margin-top:10px">＋ Geldeingang hinzufügen</button>
+    <div id="incomeMessage" class="msg"></div><div id="incomeInfo" class="msg"></div>
+  </div></section>
 
   <section id="fixed" class="panel hidden">
     <div class="card">
@@ -562,7 +580,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <div class="calendarGrid" id="calendarGrid"></div>
     </div>
     <div class="card" data-block-id="payment-list">
-      <b>📤 Erwartete Zahlungsausgänge</b>
+      <b>📅 Geldeingänge und Abbuchungen</b>
       <div class="muted">„ca.“ bedeutet: Der Tag kann sich leicht verschieben.</div>
       <div id="calendarList" style="margin-top:8px"></div>
     </div>
@@ -573,7 +591,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
       <b>➕ Ausgabe eintragen</b>
       <label>Kategorie</label><select id="category"></select>
       <label>Betrag</label><input id="amount" inputmode="decimal" placeholder="0,00">
-      <label>Notiz</label><input id="note" placeholder="z. B. Buch, Café, Rossmann …">
+      <label>Bezahlt mit</label><select id="expenseSource"><option value="bank">Konto</option><option value="cash">Bargeld</option></select><label>Notiz</label><input id="note" placeholder="z. B. Buch, Café, Rossmann …">
       <button id="addExpense" class="primary" style="width:100%;margin-top:10px">Ausgabe speichern</button>
       <div id="msg" class="msg"></div>
     </div>
@@ -597,6 +615,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </section>
 
+  <section id="settings" class="panel hidden">
   <div class="card">
     <b>🔄 Neustart & Backup</b>
     <div class="muted">Für einen wirklich sauberen Monatsstart kannst du alle Ausgaben auf 0 setzen.</div>
@@ -658,6 +677,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </details>
 
+  </section>
   <div class="footer">Deine Daten werden lokal auf deinem iPhone gespeichert. E-Bike und Gravel sind getrennt versichert, und du kannst zwischen mehreren Farbdesigns wechseln.</div>
 </div>
 
@@ -793,6 +813,10 @@ Object.entries(db.months).forEach(([key,s])=>{
  });
 });
 if(!Array.isArray(db.savingsGoals)) db.savingsGoals=[];
+// Existing monthly income remains unchanged until the user starts using payment entries.
+function entriesTotal(s){return s.incomeEntries.reduce((sum,e)=>sum+(Number(e.amount)||0),0)}
+function initIncome(s){if(!Array.isArray(s.incomeEntries)){s.incomeEntries=[{name:'Gehalt – 1. Zahlung',amount:Math.min(1000,Number(s.income)||0),day:1,received:false},{name:'Gehalt – 2. Zahlung',amount:Math.max(0,(Number(s.income)||0)-1000),day:15,received:false}];}s.income=entriesTotal(s)}
+Object.values(db.months).forEach(initIncome);
 Object.values(db.months).forEach(s=>{
  if(typeof s.notes!=='string') s.notes='';
  syncFixedCalendar(s);
@@ -802,7 +826,7 @@ save();
 function save(){localStorage.setItem(KEY,JSON.stringify(db))}
 function state(){return db.months[db.active]}
 function num(v){let raw=String(v).trim().replace(/\s/g,'');if(raw.includes(','))raw=raw.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(raw))raw=raw.replace(/\./g,'');const n=Number(raw);return raw!==''&&Number.isFinite(n)?n:NaN}
-function planned(b){return b.base+Math.max(0,state().income-BASE)*(b.extraShare||0)}
+function planned(b){return Number(b.base)||0}
 function fixedTotal(){return state().fixed.reduce((s,x)=>s+x.amount,0)}
 function budgetTotal(){return state().budgets.reduce((s,x)=>s+planned(x),0)}
 function syncSpent(){
@@ -846,7 +870,7 @@ function openOrCreateMonth(key){
  if(!db.months[key]){
   const keys=Object.keys(db.months).sort(),sourceKey=keys.filter(k=>k<key).pop()||keys[0];
   const prev=db.months[sourceKey];
-  const s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,
+  const s={income:1300,incomeEntries:[{name:'Gehalt – 1. Zahlung',amount:1000,day:1,received:false,source:'bank'},{name:'Gehalt – 2. Zahlung',amount:300,day:15,received:false,source:'bank'}],savingGoal:prev.savingGoal,savedActual:0,
     fixed:prev.fixed.map(f=>({...f,done:false})),
     budgets:prev.budgets.map(b=>({...b,spent:0})),expenses:[],notes:''};
   s.calendar=defaultCalendar(key,s);
@@ -860,13 +884,19 @@ function nextMonthKey(key){
  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
 }
 function renderTop(){
- syncSpent();$('income').value=String(state().income).replace('.',',');
+ syncSpent();$('income').value=String(state().income).replace('.',',');$('savedActual').value=String(state().savedActual||0).replace('.',',');
  const open=state().fixed.filter(x=>!x.done);$('openFixed').textContent=euro.format(open.reduce((s,x)=>s+x.amount,0));$('openCount').textContent=open.length+' offen';$('free').textContent=euro.format(state().income-fixedTotal()-budgetTotal());
+ const saver=state().budgets.find(x=>x.name==='Sparen'),target=saver?planned(saver):0,actual=state().savedActual||0;
+ $('savingBar').style.width=(target?Math.min(100,actual/target*100):0)+'%';$('savingText').textContent=euro.format(actual)+' tatsächlich gespart · '+euro.format(target)+' geplant';
  const flex=state().budgets.filter(b=>b.name!=='Sparen').reduce((sum,b)=>sum+Math.max(0,planned(b)-b.spent),0),totalDays=daysInMonth(db.active),day=activeDay(),left=Math.max(1,totalDays-day+1);
  $('todayAvailable').textContent=euro.format(flex/left);$('todayText').textContent='pro Tag bis Monatsende · '+euro.format(flex)+' flexibel übrig';
  const p=Math.min(100,Math.max(0,day/totalDays*100));$('monthBar').style.width=p+'%';$('monthProgressText').textContent='Monat '+Math.round(p)+' %';$('daysLeftText').textContent=left+' Tage übrig'
 }
-
+function renderSavings(){
+ const months=Object.keys(db.months).sort();const total=months.reduce((s,k)=>s+(db.months[k].savedActual||0),0);$('savedTotal').textContent='Gesamt '+euro.format(total);
+ const max=Math.max(1,...months.map(k=>db.months[k].savedActual||0));$('savingsHistory').innerHTML='';
+ months.forEach(k=>{const v=db.months[k].savedActual||0;const r=document.createElement('div');r.className='savingsBarRow';r.innerHTML='<span class="small"></span><div class="savingsTrack"><div class="savingsFill"></div></div><b class="small right"></b>';r.children[0].textContent=monthLabel(k);r.querySelector('.savingsFill').style.width=(v/max*100)+'%';r.querySelector('b').textContent=euro.format(v);$('savingsHistory').appendChild(r)})
+}
 let editingFixedName=null;
 function resetFixedEditor(){
  editingFixedName=null;
@@ -919,7 +949,7 @@ function renderFixed(){
  if(!state().fixed.length)$('fixedList').innerHTML='<div class="msg">Noch keine Fixkosten. Füge unten deinen ersten Posten hinzu.</div>';
 }
 function renderBudgets(){
- syncSpent();$('budgets').innerHTML='';let spent=0,total=0;state().budgets.forEach(b=>{const t=planned(b),left=t-b.spent,pct=t?Math.min(100,Math.max(0,b.spent/t*100)):0;spent+=b.spent;total+=t;const d=document.createElement('div');d.className='budget';d.innerHTML='<div class="budgethead"><div><b></b><div class="sub"></div></div><div class="right"><b></b><div class="sub">übrig</div></div></div><div class="bar"><div></div></div>';d.querySelector('.budgethead>div:first-child b').textContent=em(b)+' '+b.name;d.querySelector('.budgethead>div:first-child .sub').textContent='Budget '+euro.format(t)+' · ausgegeben '+euro.format(b.spent);d.querySelector('.right b').textContent=euro.format(left);d.querySelector('.bar>div').style.width=pct+'%';$('budgets').appendChild(d)});$('budgetUsage').textContent=total?Math.round(spent/total*100)+' % genutzt':'0 % genutzt'
+ syncSpent();$('budgets').innerHTML='';let spent=0,total=0;state().budgets.forEach(b=>{const t=planned(b),left=t-b.spent,pct=t?Math.min(100,Math.max(0,b.spent/t*100)):0;spent+=b.spent;total+=t;const d=document.createElement('div');d.className='budget';d.innerHTML='<div class="budgethead"><div><b></b><div class="sub"></div></div><div class="right"><b></b><div class="sub">übrig</div></div></div><div class="bar"><div></div></div>';d.querySelector('.budgethead>div:first-child b').textContent=em(b)+' '+b.name;d.querySelector('.budgethead>div:first-child .sub').textContent='Budget '+euro.format(t)+' · ausgegeben '+euro.format(b.spent);d.querySelector('.right b').textContent=euro.format(left);d.querySelector('.bar>div').style.width=pct+'%';const edit=document.createElement('button');edit.textContent='Budget ändern';edit.style.marginTop='8px';edit.onclick=()=>{const value=prompt('Budget für '+b.name, String(b.base).replace('.',','));if(value===null)return;const n=num(value);if(!Number.isFinite(n)||n<0){alert('Bitte einen gültigen Betrag eingeben.');return}b.base=n;save();renderAll()};d.appendChild(edit);$('budgets').appendChild(d)});$('budgetUsage').textContent=total?Math.round(spent/total*100)+' % genutzt':'0 % genutzt'
 }
 function renderCategories(){
  $('category').innerHTML='';state().budgets.filter(b=>b.name!=='Sparen').forEach(b=>{const o=document.createElement('option');o.value=b.name;o.textContent=em(b)+' '+b.name;$('category').appendChild(o)});
@@ -928,7 +958,7 @@ function renderCategories(){
 function renderExpenses(){
  syncSpent();$('expenseList').innerHTML='';const xs=state().expenses.map((x,i)=>({...x,_index:i})).reverse();$('spentTotal').textContent=euro.format(state().expenses.reduce((s,x)=>s+x.amount,0));
  if(!xs.length){$('expenseList').innerHTML='<div class="msg">Noch keine Ausgaben eingetragen.</div>';return}
- xs.slice(0,15).forEach(x=>{const r=document.createElement('div');r.className='expense';const l=document.createElement('div');l.style.minWidth='0';l.innerHTML='<b></b><div class="sub"></div>';const b=state().budgets.find(z=>z.name===x.category);l.querySelector('b').textContent=(b?em(b):(defaultsEmoji[x.category]||'💳'))+' '+x.category;l.querySelector('.sub').textContent=x.note||'Ausgabe';const actions=document.createElement('div');actions.className='expenseActions';const a=document.createElement('b');a.textContent='− '+euro.format(x.amount);const edit=document.createElement('button');edit.className='deleteBtn';edit.textContent='✏️';edit.title='Ausgabe bearbeiten';edit.onclick=()=>{
+ xs.slice(0,15).forEach(x=>{const r=document.createElement('div');r.className='expense';const l=document.createElement('div');l.style.minWidth='0';l.innerHTML='<b></b><div class="sub"></div>';const b=state().budgets.find(z=>z.name===x.category);l.querySelector('b').textContent=(b?em(b):(defaultsEmoji[x.category]||'💳'))+' '+x.category;l.querySelector('.sub').textContent=(x.note||'Ausgabe')+' · '+(x.source==='cash'?'Bargeld':'Konto');const actions=document.createElement('div');actions.className='expenseActions';const a=document.createElement('b');a.textContent='− '+euro.format(x.amount);const edit=document.createElement('button');edit.className='deleteBtn';edit.textContent='✏️';edit.title='Ausgabe bearbeiten';edit.onclick=()=>{
  const current=state().expenses[x._index];
  const cat=prompt('Kategorie:',current.category);if(cat===null)return;
  const amt=prompt('Betrag:',String(current.amount).replace('.',','));if(amt===null)return;
@@ -942,13 +972,13 @@ function renderExpenses(){
 const del=document.createElement('button');del.className='deleteBtn';del.textContent='🗑️';del.onclick=()=>{if(!confirm('Diesen Posten wirklich löschen?'))return;state().expenses.splice(x._index,1);save();$('msg').textContent='Posten gelöscht – Betrag wieder verfügbar. ✓';renderAll()};actions.append(a,edit,del);r.append(l,actions);$('expenseList').appendChild(r)})
 }
 function renderCalendar(){
- const s=state(),items=s.calendar||[],[y,m]=db.active.split('-').map(Number),total=daysInMonth(db.active),first=(new Date(y,m-1,1).getDay()+6)%7;
+ const s=state(),items=[...(s.calendar||[]),...(s.incomeEntries||[]).map(e=>({name:e.name,amount:e.amount,day:e.day,income:true,received:e.received}))],[y,m]=db.active.split('-').map(Number),total=daysInMonth(db.active),first=(new Date(y,m-1,1).getDay()+6)%7;
  $('calendarGrid').innerHTML='';['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(x=>{const h=document.createElement('div');h.className='calHead';h.textContent=x;$('calendarGrid').appendChild(h)});
  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='day empty';$('calendarGrid').appendChild(e)}
  const now=new Date();
  for(let d=1;d<=total;d++){const el=document.createElement('div');el.className='day';el.textContent=d;const has=items.some(x=>x.day!=null&&Math.min(x.day,total)===d);if(has){el.classList.add('hasPay');const dot=document.createElement('div');dot.className='dot';el.appendChild(dot)}if(now.getFullYear()===y&&now.getMonth()+1===m&&now.getDate()===d)el.classList.add('today');$('calendarGrid').appendChild(el)}
- $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(defaultsEmoji[x.fixedName]||'📤')+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(Math.min(x.day,total)).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=euro.format(x.amount);r.append(l,a);$('calendarList').appendChild(r)});
- $('calendarSum').textContent=euro.format(items.reduce((s,x)=>s+x.amount,0))
+ $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(x.income?'📥':(defaultsEmoji[x.fixedName]||'📤'))+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(Math.min(x.day,total)).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=(x.income?'+ ':'')+euro.format(x.amount);if(x.income)l.querySelector('.sub').textContent+=(x.received?' · erhalten':' · geplant');r.append(l,a);$('calendarList').appendChild(r)});
+ $('calendarSum').textContent=euro.format(items.filter(x=>!x.income).reduce((s,x)=>s+x.amount,0))
 }
 
 function renderSummary(){
@@ -970,9 +1000,6 @@ function renderSummary(){
  s.expenses.forEach(e=>spendBy[e.category]=(spendBy[e.category]||0)+e.amount);
  const top=Object.entries(spendBy).sort((a,b)=>b[1]-a[1])[0];
  $('topCategory').textContent=top ? 'Größte Ausgabenkategorie: '+top[0]+' · '+euro.format(top[1]) : 'Noch keine Ausgaben erfasst.';
-}
-function renderNotes(){
- $('monthNotes').value=state().notes||'';
 }
 function renderGoals(){
  const list=$('goalsList');list.innerHTML='';
@@ -1081,7 +1108,13 @@ function initBlockReorder(){
  applyBlockOrder();
 }
 
-function renderAll(){applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
+function renderIncome(){
+ const s=state();initIncome(s);const list=$('incomeList');list.innerHTML='';
+ s.incomeEntries.forEach((entry,i)=>{const row=document.createElement('div');row.className='row';const label=document.createElement('div');label.className='left';const name=document.createElement('div');name.className='name';name.textContent=entry.name;const sub=document.createElement('div');sub.className='sub';sub.textContent=(entry.day?entry.day+'. des Monats · ':'')+euro.format(entry.amount)+' · '+(entry.source==='cash'?'Bargeld':'Konto')+(entry.received?' · erhalten':' · geplant');label.append(name,sub);const actions=document.createElement('div');actions.className='fixedActions';const toggle=document.createElement('button');toggle.textContent=entry.received?'✓ Erhalten':'Offen';toggle.onclick=()=>{entry.received=!entry.received;save();renderAll()};const edit=document.createElement('button');edit.textContent='✏️';edit.setAttribute('aria-label','Geldeingang bearbeiten');edit.onclick=()=>{const n=prompt('Bezeichnung',entry.name);if(n===null)return;const v=prompt('Betrag',String(entry.amount).replace('.',','));if(v===null)return;const d=prompt('Tag im Monat (1–31)',entry.day||'');if(d===null)return;const amount=num(v),day=Number(d);if(!n.trim()||!Number.isFinite(amount)||amount<0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){alert('Bitte Name, Betrag und einen gültigen Tag für diesen Monat eingeben.');return}const source=prompt('Konto oder Bargeld?',entry.source==='cash'?'Bargeld':'Konto');if(source===null)return;if(!['konto','bargeld'].includes(source.trim().toLowerCase())){alert('Bitte Konto oder Bargeld eingeben.');return}Object.assign(entry,{name:n.trim(),amount,day,source:source.trim().toLowerCase()==='bargeld'?'cash':'bank'});s.income=entriesTotal(s);save();renderAll()};const del=document.createElement('button');del.textContent='🗑️';del.setAttribute('aria-label','Geldeingang löschen');del.onclick=()=>{if(!confirm('Geldeingang löschen?'))return;s.incomeEntries.splice(i,1);s.income=entriesTotal(s);save();renderAll()};actions.append(toggle,edit,del);row.append(label,actions);list.append(row)});
+ const received=s.incomeEntries.filter(e=>e.received).reduce((a,e)=>a+e.amount,0);$('incomeBank').textContent=euro.format(s.incomeEntries.filter(e=>e.received&&e.source!=='cash').reduce((a,e)=>a+e.amount,0));$('incomeCash').textContent=euro.format(s.incomeEntries.filter(e=>e.received&&e.source==='cash').reduce((a,e)=>a+e.amount,0));$('incomeInfo').textContent='Geplant: '+euro.format(s.income)+' · davon erhalten: '+euro.format(received)+'. Die Monatsplanung berücksichtigt geplante Einnahmen. Die Beträge oben sind Einnahmen, keine Kontostände.';
+}
+$('addIncome').onclick=()=>{const name=$('incomeName').value.trim(),amount=num($('incomeAmount').value),day=Number($('incomeDay').value);if(!name||!Number.isFinite(amount)||amount<=0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){$('incomeMessage').textContent='Bitte Name, positiven Betrag und gültigen Tag eingeben.';return}state().incomeEntries.push({name,amount,day,source:$('incomeSource').value,received:true});state().income=entriesTotal(state());$('incomeName').value='';$('incomeAmount').value='';$('incomeDay').value='';$('incomeMessage').textContent='Einnahme gespeichert ✓';save();renderAll()};
+function renderAll(){renderIncome();applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
 let arrangeMode=false;
@@ -1097,13 +1130,7 @@ $('month').onchange=e=>{db.active=e.target.value;resetFixedEditor();save();rende
 $('nextMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
 $('openMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth($('targetMonth').value)};
 $('income').onchange=e=>{const n=num(e.target.value);if(n>=0){state().income=n;save();renderAll()}};
-$('monthNotes').oninput=e=>{
- state().notes=e.target.value;
- save();
- $('notesStatus').textContent='Automatisch gespeichert ✓';
- clearTimeout(window.__notesTimer);
- window.__notesTimer=setTimeout(()=>{$('notesStatus').textContent=''},1400);
-};
+$('savedActual').onchange=e=>{const n=num(e.target.value);if(n>=0){state().savedActual=n;save();renderAll()}};
 $('addGoal').onclick=()=>{
  const name=$('goalName').value.trim(),target=num($('goalTarget').value),saved=num($('goalSaved').value||'0');
  if(!name){$('goalMsg').textContent='Bitte gib dem Sparziel einen Namen.';return;}
@@ -1138,13 +1165,13 @@ $('addFixed').onclick=()=>{
  const message=oldName?'Fixkosten aktualisiert ✓':'Fixkosten hinzugefügt ✓';
  resetFixedEditor();save();renderAll();$('fixedMsg').textContent=message;
 };
-$('addExpense').onclick=()=>{const n=num($('amount').value);if(!(n>0)){$('msg').textContent='Bitte einen gültigen Betrag eingeben.';return}state().expenses.push({category:$('category').value,amount:n,note:$('note').value.trim()});$('amount').value='';$('note').value='';$('msg').textContent='Gespeichert ✓';save();renderAll()};
+$('addExpense').onclick=()=>{const n=num($('amount').value);if(!(n>0)){$('msg').textContent='Bitte einen gültigen Betrag eingeben.';return}state().expenses.push({category:$('category').value,amount:n,source:$('expenseSource').value,note:$('note').value.trim()});$('amount').value='';$('note').value='';$('msg').textContent='Gespeichert ✓';save();renderAll()};
 $('addCategory').onclick=()=>{const name=$('catName').value.trim(),budget=num($('catBudget').value),ico=$('catEmoji').value.trim()||'✨';if(!name){$('categoryMsg').textContent='Bitte gib der Kategorie einen Namen.';return}if(!(budget>=0)){$('categoryMsg').textContent='Bitte gib ein gültiges Budget ein.';return}if(state().budgets.some(b=>b.name.toLowerCase()===name.toLowerCase())){$('categoryMsg').textContent='Diese Kategorie gibt es schon.';return}state().budgets.push({name,base:budget,extraShare:0,spent:0,custom:true,emoji:ico});$('catName').value='';$('catBudget').value='';$('catEmoji').value='';$('categoryMsg').textContent='Kategorie hinzugefügt ✓';save();renderAll()};
 $('cleanMonth').onclick=()=>{if(!confirm('Wirklich komplett neu starten?\\n\\nAlle erfassten Ausgaben dieses Monats werden gelöscht und alle Fixkosten wieder auf „Offen“ gesetzt. Deine Budgets und Kategorien bleiben erhalten.'))return;state().expenses=[];state().fixed.forEach(f=>f.done=false);state().savedActual=0;save();renderAll();alert('Der Monat ist jetzt sauber auf Start gesetzt ✓')};
 $('exportBackup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Sabrina-Budget-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('importBackup').onclick=()=>$('backupFile').click();
 $('backupFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;if(!db.settings)db.settings={theme:'sage',font:'modern'};
-if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'});syncFixedCalendar(s)});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
+if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{initIncome(s);if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'});syncFixedCalendar(s)});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
 $('newMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
 initBlockReorder();
 renderAll();
