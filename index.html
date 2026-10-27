@@ -460,7 +460,7 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     <div class="card" data-block-id="month-status">
       <div style="display:flex;gap:10px;align-items:end">
         <div style="flex:1"><label>📅 Monat</label><select id="month"></select></div>
-        <div style="flex:1"><label>💵 Einkommen</label><input id="income" inputmode="decimal"></div>
+        <div style="flex:1"><label>💵 Geplantes Einkommen</label><input id="income" inputmode="decimal" readonly></div>
       </div>
       <div class="monthControls">
         <button id="nextMonth" type="button">＋ Folgemonat</button>
@@ -474,6 +474,14 @@ textarea{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line)
     </div>
   </div>
 
+  <div class="card" data-block-id="income-entries">
+    <b>💵 Geldeingänge</b><div class="muted">Plane deine Zahlungen und markiere sie, sobald sie angekommen sind. Zuschläge kannst du ergänzen.</div>
+    <div id="incomeList"></div>
+    <div class="grid2"><div><label for="incomeName">Bezeichnung</label><input id="incomeName" placeholder="z. B. Zuschläge"></div><div><label for="incomeAmount">Betrag</label><input id="incomeAmount" inputmode="decimal" placeholder="0,00"></div></div>
+    <label for="incomeDay">Tag im Monat</label><input id="incomeDay" type="number" min="1" max="31" placeholder="z. B. 15">
+    <button id="addIncome" class="primary" type="button" style="margin-top:10px">＋ Geldeingang hinzufügen</button>
+    <div id="incomeMessage" class="msg"></div><div id="incomeInfo" class="msg"></div>
+  </div>
   <div class="tabs">
     <button data-tab="overview" class="active">Übersicht</button>
     <button data-tab="fixed">Fixkosten</button>
@@ -807,6 +815,10 @@ Object.entries(db.months).forEach(([key,s])=>{
  });
 });
 if(!Array.isArray(db.savingsGoals)) db.savingsGoals=[];
+// Existing monthly income remains unchanged until the user starts using payment entries.
+function entriesTotal(s){return s.incomeEntries.reduce((sum,e)=>sum+(Number(e.amount)||0),0)}
+function initIncome(s){if(!Array.isArray(s.incomeEntries)){s.incomeEntries=[{name:'Gehalt – 1. Zahlung',amount:Math.min(1000,Number(s.income)||0),day:1,received:false},{name:'Gehalt – 2. Zahlung',amount:Math.max(0,(Number(s.income)||0)-1000),day:15,received:false}];}s.income=entriesTotal(s)}
+Object.values(db.months).forEach(initIncome);
 Object.values(db.months).forEach(s=>{
  if(typeof s.notes!=='string') s.notes='';
  syncFixedCalendar(s);
@@ -860,7 +872,7 @@ function openOrCreateMonth(key){
  if(!db.months[key]){
   const keys=Object.keys(db.months).sort(),sourceKey=keys.filter(k=>k<key).pop()||keys[0];
   const prev=db.months[sourceKey];
-  const s={income:prev.income,savingGoal:prev.savingGoal,savedActual:0,
+  const s={income:prev.income,incomeEntries:(prev.incomeEntries||[]).map(e=>({...e,received:false})),savingGoal:prev.savingGoal,savedActual:0,
     fixed:prev.fixed.map(f=>({...f,done:false})),
     budgets:prev.budgets.map(b=>({...b,spent:0})),expenses:[],notes:''};
   s.calendar=defaultCalendar(key,s);
@@ -962,13 +974,13 @@ function renderExpenses(){
 const del=document.createElement('button');del.className='deleteBtn';del.textContent='🗑️';del.onclick=()=>{if(!confirm('Diesen Posten wirklich löschen?'))return;state().expenses.splice(x._index,1);save();$('msg').textContent='Posten gelöscht – Betrag wieder verfügbar. ✓';renderAll()};actions.append(a,edit,del);r.append(l,actions);$('expenseList').appendChild(r)})
 }
 function renderCalendar(){
- const s=state(),items=s.calendar||[],[y,m]=db.active.split('-').map(Number),total=daysInMonth(db.active),first=(new Date(y,m-1,1).getDay()+6)%7;
+ const s=state(),items=[...(s.calendar||[]),...(s.incomeEntries||[]).map(e=>({name:e.name,amount:e.amount,day:e.day,income:true,received:e.received}))],[y,m]=db.active.split('-').map(Number),total=daysInMonth(db.active),first=(new Date(y,m-1,1).getDay()+6)%7;
  $('calendarGrid').innerHTML='';['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(x=>{const h=document.createElement('div');h.className='calHead';h.textContent=x;$('calendarGrid').appendChild(h)});
  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='day empty';$('calendarGrid').appendChild(e)}
  const now=new Date();
  for(let d=1;d<=total;d++){const el=document.createElement('div');el.className='day';el.textContent=d;const has=items.some(x=>x.day!=null&&Math.min(x.day,total)===d);if(has){el.classList.add('hasPay');const dot=document.createElement('div');dot.className='dot';el.appendChild(dot)}if(now.getFullYear()===y&&now.getMonth()+1===m&&now.getDate()===d)el.classList.add('today');$('calendarGrid').appendChild(el)}
- $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(defaultsEmoji[x.fixedName]||'📤')+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(Math.min(x.day,total)).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=euro.format(x.amount);r.append(l,a);$('calendarList').appendChild(r)});
- $('calendarSum').textContent=euro.format(items.reduce((s,x)=>s+x.amount,0))
+ $('calendarList').innerHTML='';const sorted=[...items].sort((a,b)=>(a.day??99)-(b.day??99));sorted.forEach(x=>{const fixed=s.fixed.find(f=>f.name===x.fixedName),done=fixed&&fixed.done;const r=document.createElement('div');r.className='calItem'+(done?' calDone':'');const l=document.createElement('div');l.innerHTML='<b></b><div class="sub"></div>';l.querySelector('b').textContent=(done?'✓ ':'')+(x.income?'📥':(defaultsEmoji[x.fixedName]||'📤'))+' '+x.name;l.querySelector('.sub').textContent=x.day?(x.approx?'ca. ':'')+String(Math.min(x.day,total)).padStart(2,'0')+'.'+String(m).padStart(2,'0')+'.'+y:'Datum noch offen';const a=document.createElement('b');a.textContent=(x.income?'+ ':'')+euro.format(x.amount);if(x.income)l.querySelector('.sub').textContent+=(x.received?' · erhalten':' · geplant');r.append(l,a);$('calendarList').appendChild(r)});
+ $('calendarSum').textContent=euro.format(items.filter(x=>!x.income).reduce((s,x)=>s+x.amount,0))
 }
 
 function renderSummary(){
@@ -1101,7 +1113,13 @@ function initBlockReorder(){
  applyBlockOrder();
 }
 
-function renderAll(){applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
+function renderIncome(){
+ const s=state();initIncome(s);const list=$('incomeList');list.innerHTML='';
+ s.incomeEntries.forEach((entry,i)=>{const row=document.createElement('div');row.className='row';const label=document.createElement('div');label.className='left';const name=document.createElement('div');name.className='name';name.textContent=entry.name;const sub=document.createElement('div');sub.className='sub';sub.textContent=(entry.day?entry.day+'. des Monats · ':'')+euro.format(entry.amount)+(entry.received?' · erhalten':' · geplant');label.append(name,sub);const actions=document.createElement('div');actions.className='fixedActions';const toggle=document.createElement('button');toggle.textContent=entry.received?'✓ Erhalten':'Offen';toggle.onclick=()=>{entry.received=!entry.received;save();renderAll()};const edit=document.createElement('button');edit.textContent='✏️';edit.setAttribute('aria-label','Geldeingang bearbeiten');edit.onclick=()=>{const n=prompt('Bezeichnung',entry.name);if(n===null)return;const v=prompt('Betrag',String(entry.amount).replace('.',','));if(v===null)return;const d=prompt('Tag im Monat (1–31)',entry.day||'');if(d===null)return;const amount=num(v),day=Number(d);if(!n.trim()||!Number.isFinite(amount)||amount<0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){alert('Bitte Name, Betrag und einen gültigen Tag für diesen Monat eingeben.');return}Object.assign(entry,{name:n.trim(),amount,day});s.income=entriesTotal(s);save();renderAll()};const del=document.createElement('button');del.textContent='🗑️';del.setAttribute('aria-label','Geldeingang löschen');del.onclick=()=>{if(!confirm('Geldeingang löschen?'))return;s.incomeEntries.splice(i,1);s.income=entriesTotal(s);save();renderAll()};actions.append(toggle,edit,del);row.append(label,actions);list.append(row)});
+ const received=s.incomeEntries.filter(e=>e.received).reduce((a,e)=>a+e.amount,0);$('incomeInfo').textContent='Geplant: '+euro.format(s.income)+' · davon erhalten: '+euro.format(received)+'. Die Monatsplanung nutzt alle geplanten Eingänge. Zusätzliche Beträge über 1.300 € werden nach den vorhandenen Anteilen auf die Budgets verteilt.';
+}
+$('addIncome').onclick=()=>{const name=$('incomeName').value.trim(),amount=num($('incomeAmount').value),day=Number($('incomeDay').value);if(!name||!Number.isFinite(amount)||amount<=0||!Number.isInteger(day)||day<1||day>daysInMonth(db.active)){$('incomeMessage').textContent='Bitte Name, positiven Betrag und gültigen Tag eingeben.';return}state().incomeEntries.push({name,amount,day,received:false});state().income=entriesTotal(state());$('incomeName').value='';$('incomeAmount').value='';$('incomeDay').value='';$('incomeMessage').textContent='Geldeingang hinzugefügt ✓';save();renderAll()};
+function renderAll(){renderIncome();applyTheme();applyFont();renderMonths();renderTop();renderSummary();renderNotes();renderGoals();renderSavings();renderFixed();renderBudgets();renderCategories();renderExpenses();renderCalendar();applyBlockOrder()}
 
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));$(b.dataset.tab).classList.remove('hidden')});
 let arrangeMode=false;
@@ -1165,7 +1183,7 @@ $('cleanMonth').onclick=()=>{if(!confirm('Wirklich komplett neu starten?\\n\\nAl
 $('exportBackup').onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Sabrina-Budget-Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $('importBackup').onclick=()=>$('backupFile').click();
 $('backupFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.months)throw 0;db=x;if(!db.settings)db.settings={theme:'sage',font:'modern'};
-if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'});syncFixedCalendar(s)});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
+if(!db.settings.font)db.settings.font='modern';if(!db.settings.blockOrder||typeof db.settings.blockOrder!=='object')db.settings.blockOrder={};Object.entries(db.months).forEach(([k,s])=>{initIncome(s);if(typeof s.savedActual!=='number')s.savedActual=0;if(!s.calendar)s.calendar=defaultCalendar(k,s);(s.budgets||[]).forEach(b=>{if(typeof b.custom!=='boolean')b.custom=false;if(!b.emoji)b.emoji=defaultsEmoji[b.name]||'🧺'});syncFixedCalendar(s)});save();renderAll();alert('Backup geladen ✓')}catch(err){alert('Backup konnte nicht gelesen werden.')}};r.readAsText(f)};
 $('newMonth').onclick=()=>{resetFixedEditor();openOrCreateMonth(nextMonthKey(db.active))};
 initBlockReorder();
 renderAll();
